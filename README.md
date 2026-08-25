@@ -6,7 +6,14 @@
 客户端。当前版本覆盖 `llms-full.txt` 中已经上线的 59 个 REST 端点，统一完成 API Key
 注入、HTTP 传输、响应信封解码和业务错误分类。
 
-本 crate 尚未发布到 crates.io。使用 Git 依赖或本地路径依赖时，请锁定具体提交。
+安装 crates.io 上的 `0.1.1` 版本：
+
+```shell
+cargo add financial-api@0.1.1
+```
+
+源码与问题跟踪位于
+[Choi-Jungwoo/financial-api-rs](https://github.com/Choi-Jungwoo/financial-api-rs)。
 
 ## 快速开始
 
