@@ -1,8 +1,11 @@
 [tools]
-rust = "latest"
+rust = "nightly-2026-08-16"
 
 [tasks.fmt]
 run = "cargo fmt --all -- --check"
+
+[tasks.fmt-fix]
+run = "cargo fmt --all"
 
 [tasks.check]
 run = "cargo check --all-targets"
@@ -11,7 +14,13 @@ run = "cargo check --all-targets"
 run = "cargo test --all-targets"
 
 [tasks.clippy]
-run = "cargo clippy --all-targets"
+run = "cargo clippy --all-targets -- -D warnings"
+
+[tasks.doc]
+run = "cargo doc --no-deps"
+
+[tasks.doc-test]
+run = "cargo test --doc"
 
 [tasks.package-list]
 run = "cargo package --list --allow-dirty"

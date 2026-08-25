@@ -2,6 +2,7 @@
 name = "financial-api"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.88"
 description = "Rust client for the official Tonghuashun Financial Data REST API"
 license = "MIT"
 readme = "README.md"
@@ -13,3 +14,13 @@ publish = ["crates-io"]
 exclude = [".gitignore", "AGENTS.md", "CONTEXT.md", "docs/**", "mise.toml"]
 
 [dependencies]
+derive_more = { version = "2.1.1", default-features = false, features = ["display", "from"] }
+reqwest = { version = "0.13.4", default-features = false, features = ["json", "query", "rustls"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = { version = "1.0.151", features = ["arbitrary_precision"] }
+thiserror = "2.0.20"
+time = { version = "0.3.55", features = ["formatting", "macros", "parsing", "serde-well-known"] }
+
+[dev-dependencies]
+tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread"] }
+wiremock = "0.6.5"

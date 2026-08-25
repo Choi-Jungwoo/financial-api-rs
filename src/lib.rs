@@ -1,14 +1,30 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+#![doc = include_str!("../README.md")]
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+mod a_share;
+mod client;
+mod endpoints;
+mod error;
+mod fund;
+mod index;
+mod market_dump;
+mod meta;
+mod models;
+mod types;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub use a_share::PriceSnapshotSelection;
+pub use client::{ApiKey, Client, ClientBuilder, Response};
+pub use endpoints::{EndpointInfo, SUPPORTED_ENDPOINTS};
+pub use error::{BusinessError, BusinessErrorKind, Error, ValidationError};
+pub use market_dump::{MarketDumpUrl, SecretUrl};
+pub use meta::{TickerListRequest, TickerSearchRequest};
+pub use models::*;
+pub use serde_json::Value as JsonValue;
+pub use types::{
+    AShareCode, Adjustment, AnomalyTag, AssetType, AuctionStage, CompactDate, CompanyId, Cursor,
+    DailyInterval, DragonTigerBoard, Exchange, FinancialAbilityKind, FinancialIndicatorId,
+    FinancialPeriod, FinancialRange, FinancialReport, FiscalPeriod, FundNavType, FundRange,
+    FundType, HolderMergeScope, HolderRecordScope, HotListPeriod, IndexTag, LimitBreakSortField,
+    LimitDownSortField, LimitUpSortField, ManagerId, ManagerPerformanceRange, NaturalDate,
+    OfferingStatus, Page, PortfolioAssetType, PreciseDecimal, RankTrend, ReportType, SearchQuery,
+    ShanghaiDateMillis, SortDirection, Thscode, UnixMillis,
+};

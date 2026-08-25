@@ -2,117 +2,133 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
-面向[同花顺官方金融数据服务](https://github.com/HiThink-Tech/Financial-API)的 Rust 客户端
-crate，目标是以类型安全、可测试且符合 Rust 习惯的接口访问 A 股、指数、基金及同花顺特色
-数据。
+面向[同花顺官方金融数据服务](https://github.com/HiThink-Tech/Financial-API)的异步 Rust
+客户端。当前版本覆盖 `llms-full.txt` 中已经上线的 59 个 REST 端点，统一完成 API Key
+注入、HTTP 传输、响应信封解码和业务错误分类。
 
-> [!IMPORTANT]
-> 本项目处于 **pre-alpha** 阶段。当前仓库仍是初始化骨架，尚未提供可用的金融数据客户端，
-> 也尚未发布到 crates.io。请勿将下方规划能力理解为已经实现。
+本 crate 尚未发布到 crates.io。使用 Git 依赖或本地路径依赖时，请锁定具体提交。
 
-## 官方资源
+## 快速开始
 
-- [官方项目](https://github.com/HiThink-Tech/Financial-API)
-- [服务官网](https://fuyao.aicubes.cn/)
-- [在线文档](https://fuyao.aicubes.cn/docs/)
-- [REST API 参考](https://fuyao.aicubes.cn/docs/api-reference/overview/)
-- [机器可读 API 索引](https://fuyao.aicubes.cn/llms.txt)
-- [API Key 管理](https://fuyao.aicubes.cn/admin/)
+设置上游官方约定的环境变量：
 
-官方项目与在线文档定义上游服务和数据契约；本仓库只负责 Rust 客户端实现。上游能力发生
-变化时，以具体端点文档为准。
+```shell
+export HITHINK_FINANCE_API_KEY='<your-api-key>'
+```
 
-## 项目目标
+然后创建客户端并调用端点：
 
-- 提供清晰、稳定且符合 Rust API Guidelines 的客户端接口。
-- 用领域类型区分完整标的代码、纯代码、自然日、交易日、报告期和复权口径。
-- 统一处理 API Key 注入、HTTP 传输和响应信封，同时区分网络、解码与业务失败。
-- 准确保留上游的缺失值、顺序、游标、时间单位和百分比口径。
-- 使用离线 fixture 验证协议映射，让默认测试不依赖网络或真实账户。
-- 将依赖、feature 与公共 API 控制在完成当前能力所需的最小范围。
+```rust,no_run
+use financial_api::{Client, Error, SearchQuery, TickerSearchRequest};
 
-## 规划范围
+#[tokio::main]
+async fn main() -> Result<(), Error> {
+    let client = Client::from_env()?;
+    let request = TickerSearchRequest::new(SearchQuery::new("贵州茅台")?);
+    let response = client.tickers_search(&request).await?;
 
-| 能力 | 目标范围 | crate 状态 |
-| --- | --- | --- |
-| 客户端基础层 | 鉴权、传输、响应信封、错误分类 | 规划中 |
-| 标的元信息 | 标的检索、代码表与跨市场消歧 | 规划中 |
-| A 股数据 | 行情、K 线、交易日历、复权、财务与估值 | 规划中 |
-| 指数数据 | 标准指数、同花顺指数、成分股与行情 | 规划中 |
-| 基金数据 | 资料、持仓、业绩、经理、财务、资讯与场内行情 | 规划中 |
-| 特色数据 | 集合竞价、涨跌停、热榜、异动与龙虎榜 | 规划中 |
+    println!("request_id={}", response.request_id());
+    println!("{:#?}", response.data());
+    Ok(())
+}
+```
 
-该表是路线图，不是兼容性承诺。实际支持范围将在实现完成并具备可执行测试后逐项标记。
+也可以显式提供 Key，并配置私有部署或测试服务：
 
-## 当前状态
+```rust,no_run
+use financial_api::{ApiKey, Client, Error};
+use std::time::Duration;
 
-`src/lib.rs` 目前只包含初始化占位代码，因此没有可靠的安装或调用示例。首个可用版本发布后，
-本节将提供：
+fn client() -> Result<Client, Error> {
+    Client::builder(ApiKey::new("<your-api-key>")?)
+        .timeout(Duration::from_secs(20))
+        .build()
+}
+```
 
-- `cargo add` 安装命令；
-- 最小可编译调用示例；
-- API Key 配置方式；
-- 错误恢复示例；
-- 已实现端点与 feature 矩阵。
+`ApiKey` 的调试输出始终脱敏，底层 HTTP Header 也被标记为敏感。不要在业务日志中自行输出
+原始凭据。
 
-在此之前，如需立即访问数据，请使用[官方项目](https://github.com/HiThink-Tech/Financial-API)
-提供的 REST API、MCP、CLI 或 Python 工具。
+## 响应与错误
 
-## 设计原则
+所有端点先检查统一业务信封。HTTP 200 但 `code != 0` 会返回 `Error::Business`，不会被误当
+作成功。`BusinessError::kind()` 提供认证、权限、未找到、数据未就绪、限流和上游不可用等
+恢复类别；原始 `code`、`message` 与 `request_id` 仍可读取。
 
-### 类型表达领域约束
+各端点返回 `Response<端点数据类型>`，例如标的检索返回 `Response<TickerData>`。响应
+结构使用公开 DTO 表达；上游的 `null` 使用 `Option` 保留，数组顺序保持不变，不透明游标
+使用 `Cursor` 原样回传：
 
-完整标的代码、有限枚举和日期范围会在边界完成验证。内部代码不依赖裸字符串、布尔组合或
-哨兵值表达关键状态。
+```rust
+use financial_api::{Error, TickerData, Response};
 
-### 业务成功不等于 HTTP 成功
+fn consume(response: Response<TickerData>) -> Result<(), Error> {
+    for ticker in &response.data().item {
+        println!("{} {}", ticker.thscode, ticker.name);
+    }
+    Ok(())
+}
+```
 
-上游业务结果通过统一响应信封的 `code` 表达。客户端会把 HTTP 传输成功与业务成功分开，
-并按调用方可采取的恢复动作设计错误类别。
+少数上游本身就是动态对象的字段仍使用 `JsonValue`，但不会把整个普通端点退化为无类型
+JSON。全市场导出接口返回 `MarketDumpUrl`；其中预签名 URL 包装为 `SecretUrl`，调试输出
+不会泄露签名，只有显式调用 `expose()` 才能取出。
 
-### 忠实保留数据语义
+估值端点的十进制数使用 `PreciseDecimal` 保留 JSON 源数字，不经过二进制浮点转换；可通过
+`Display` 或 `as_number()` 读取其无损表示。
 
-客户端不会将 `null` 补成零，不会改写不透明分页游标，也不会混淆自然日、交易日、数据时间
-和报告期。端点未承诺的参数规范化不会由客户端擅自添加。
+## 领域类型
 
-### 默认离线验证
+- `Thscode` 表示带市场后缀的完整标的代码。
+- `AShareCode` 进一步限制为六位数字加 `.SH`、`.SZ` 或 `.BJ`。
+- `NaturalDate` 验证 `YYYY-MM-DD` 和真实公历日期。
+- `UnixMillis` 拒绝负时间戳。
+- `FinancialRange` 通过枚举让“最近 N 期”和“起止时间”互斥。
+- 复权、报告频率、基金类型、排行榜周期、排序字段等有限集合均使用枚举。
 
-单元和契约测试使用脱敏 fixture 或本地 mock。需要真实 API Key 和网络的契约测试必须显式
-启用并默认忽略。
+无损转换实现 `From`；可能失败的外部文本转换实现 `FromStr` 或显式构造函数，避免绕过领域
+校验。
 
-## 安全
+## 已支持范围
 
-API Key 与同花顺账户绑定。请将凭据保存在环境变量、系统凭据库或专用 secret manager 中；
-不要把 Key 写入源码、提交记录、日志、错误信息、测试 fixture 或问题报告。
+| 分组 | 端点数 | 能力 |
+| --- | ---: | --- |
+| 元信息 | 2 | 标的检索、标的列表 |
+| A 股 | 22 | 行情、复权、财报、交易日历、竞价、估值、异动、热榜、龙虎榜、涨跌停 |
+| A 股指数 | 4 | 同花顺指数目录、成分股、行情快照、历史日线 |
+| 基金 | 28 | 资料、持仓、业绩、持有人、经理、公司、财务、诊断、募集、资讯、行情 |
+| 全市场导出 | 3 | 十年日 K、近十日日 K、复权因子下载 URL |
 
-官方工具推荐使用 `HITHINK_FINANCE_API_KEY`。在本 crate 明确发布自己的配置契约前，这只是
-上游工具约定，不代表当前 Rust 客户端已实现自动读取。
+`SUPPORTED_ENDPOINTS` 提供当前编译版本的完整端点名称和路径，可用于能力展示或兼容性检查。
 
-如发现本仓库存在可能泄露凭据或影响用户安全的问题，请通过维护者提供的私密安全渠道报告，
-不要先公开完整复现数据。
+上游文档中明确标为“敬请期待”的 A 股基础信息、指数基础信息/权重，以及按个股反查同花顺
+指数归属不在支持范围内。
 
-## 贡献
+## 开发与验证
 
-项目尚处于搭建期，适合从一个边界清晰的端点开始贡献：
+工具链和任务统一由 `mise.toml` 管理：
 
-1. 在官方 API 索引中定位一个已上线端点，并核对其完整请求、响应和错误契约。
-2. 检查仓库已有能力、Rust 标准库和成熟生态方案，说明选择与淘汰理由。
-3. 按 Red-Green-Refactor 添加离线契约测试和最小实现。
-4. 通过 `mise.toml` 中定义的格式、静态检查、测试和文档任务。
-5. 在变更说明中列出已验证范围、未运行项和上游仍未保证的风险。
+```shell
+mise install
+mise run fmt
+mise run check
+mise run clippy
+mise run test
+mise run doc
+mise run doc-test
+```
 
-仓库尚未建立统一的 issue/PR 模板。提交贡献时，请至少说明目标端点、上游文档链接、公共 API
-变化和可复现的验证命令。
+默认测试只使用本地 mock server，不需要网络、真实账号或 API Key。
 
-## 项目边界
+## 契约与边界
 
-- 本 crate 不是行情数据源，不缓存或转售上游数据。
-- 本 crate 不承诺上游服务的可用性、数据完整性、延迟或访问权限。
-- 本项目提供的软件与示例不构成投资建议。
-- 使用同花顺服务和数据时，仍需遵守官方项目及服务适用的条款。
+- 具体请求参数、字段和错误语义以[完整聚合文档](https://fuyao.aicubes.cn/llms-full.txt)与
+  [API 总览](https://fuyao.aicubes.cn/docs/api-reference/overview/)为准。
+- 本 crate 不缓存、拼接或改写金融数据，也不承诺上游服务的可用性、完整性、延迟和权限。
+- `null` 不补零；不透明游标原样回传；自然日不会被解释成交易日。
+- 本软件及示例不构成投资建议。使用上游服务和数据时仍需遵守适用条款。
 
 ## 许可证
 
-本仓库的软件以 [MIT License](./LICENSE) 开源。
-
-MIT 许可证仅适用于本仓库的软件与文档，不授予同花顺服务、数据、商标或其他上游资产的权利。
+本仓库软件与文档使用 [MIT License](./LICENSE)。该许可证不授予同花顺服务、数据、商标或
+其他上游资产的权利。
