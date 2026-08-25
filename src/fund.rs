@@ -1,6 +1,3 @@
-mod request;
-
-use self::request::{validate_exchange_target, validate_history_range, validate_target};
 use crate::endpoints;
 use crate::{
     Client, CompanyId, Cursor, Error, FundAssetAllocationData, FundBalanceSheetsData,
@@ -15,6 +12,9 @@ use crate::{
     UnixMillis, ValidationError,
 };
 use serde::de::DeserializeOwned;
+use time::OffsetDateTime;
+
+const NANOS_PER_MILLISECOND: i128 = 1_000_000;
 
 impl Client {
     /// Fetch fund company details.
@@ -86,7 +86,7 @@ impl Client {
         thscode: &Thscode,
         merge_scope: HolderMergeScope,
     ) -> Result<Response<FundHoldersData>, Error> {
-        validate_target(fund_type, thscode)?;
+        validate_fund_target(fund_type, thscode)?;
         let query = [
             ("fund_type", fund_type.to_string()),
             ("thscode", thscode.to_string()),
@@ -102,7 +102,7 @@ impl Client {
         thscode: &Thscode,
         limit: Option<u8>,
     ) -> Result<Response<FundTopHoldersData>, Error> {
-        validate_target(fund_type, thscode)?;
+        validate_fund_target(fund_type, thscode)?;
         if limit.is_some_and(|limit| limit == 0 || limit > 10) {
             return Err(ValidationError::new("limit", "must be in the range 1..=10").into());
         }
@@ -178,7 +178,7 @@ impl Client {
         &self,
         thscode: &Thscode,
     ) -> Result<Response<FundMarketSnapshotData>, Error> {
-        validate_exchange_target(thscode)?;
+        validate_exchange_fund(thscode)?;
         self.get(
             endpoints::FUND_MARKET_SNAPSHOT,
             &[("thscode", thscode.as_str())],
@@ -193,8 +193,9 @@ impl Client {
         start: UnixMillis,
         end: UnixMillis,
     ) -> Result<Response<FundMarketHistoricalData>, Error> {
-        validate_exchange_target(thscode)?;
-        validate_history_range(start, end)?;
+        validate_exchange_fund(thscode)?;
+        validate_millis_range(start, end)?;
+        validate_max_years(start, end, 5)?;
         let query = [
             ("thscode", thscode.to_string()),
             ("interval", "1d".to_owned()),
@@ -212,7 +213,7 @@ impl Client {
         limit: Option<u32>,
         offset: Option<&Cursor>,
     ) -> Result<Response<FundNewsData>, Error> {
-        validate_target(fund_type, thscode)?;
+        validate_fund_target(fund_type, thscode)?;
         if limit == Some(0) {
             return Err(ValidationError::new("limit", "must be at least 1").into());
         }
@@ -246,7 +247,7 @@ impl Client {
         range: Option<FundRange>,
         nav_type: FundNavType,
     ) -> Result<Response<FundNavData>, Error> {
-        validate_target(fund_type, thscode)?;
+        validate_fund_target(fund_type, thscode)?;
         let mut query = fund_query(fund_type, thscode);
         if let Some(range) = range {
             query.push(("range", range.to_string()));
@@ -273,8 +274,9 @@ impl Client {
         start: UnixMillis,
         end: UnixMillis,
     ) -> Result<Response<FundIndicatorHistoryData>, Error> {
-        validate_target(fund_type, thscode)?;
-        validate_history_range(start, end)?;
+        validate_fund_target(fund_type, thscode)?;
+        validate_millis_range(start, end)?;
+        validate_max_years(start, end, 5)?;
         let mut query = fund_query(fund_type, thscode);
         query.push(("start", start.to_string()));
         query.push(("end", end.to_string()));
@@ -336,7 +338,7 @@ impl Client {
         report_type: &ReportType,
         end_date: NaturalDate,
     ) -> Result<Response<FundPortfolioHistoryData>, Error> {
-        validate_target(fund_type, thscode)?;
+        validate_fund_target(fund_type, thscode)?;
         let mut query = fund_query(fund_type, thscode);
         query.push(("report_type", report_type.to_string()));
         query.push(("end_date", end_date.to_string()));
@@ -382,7 +384,7 @@ impl Client {
         thscode: &Thscode,
         report_type: Option<&ReportType>,
     ) -> Result<Response<T>, Error> {
-        validate_target(fund_type, thscode)?;
+        validate_fund_target(fund_type, thscode)?;
         let mut query = fund_query(fund_type, thscode);
         if let Some(report_type) = report_type {
             query.push(("report_type", report_type.to_string()));
@@ -426,7 +428,7 @@ impl Client {
         fund_type: FundType,
         thscode: &Thscode,
     ) -> Result<Response<T>, Error> {
-        validate_target(fund_type, thscode)?;
+        validate_fund_target(fund_type, thscode)?;
         self.get(path, &fund_query(fund_type, thscode)).await
     }
 }
@@ -436,4 +438,77 @@ fn fund_query(fund_type: FundType, thscode: &Thscode) -> Vec<(&'static str, Stri
         ("fund_type", fund_type.to_string()),
         ("thscode", thscode.to_string()),
     ]
+}
+
+fn validate_fund_target(fund_type: FundType, thscode: &Thscode) -> Result<(), ValidationError> {
+    let suffix = thscode
+        .as_str()
+        .rsplit_once('.')
+        .map(|(_, suffix)| suffix)
+        .expect("validated thscode contains a suffix");
+    let valid = match fund_type {
+        FundType::Otc => suffix == "OF",
+        FundType::Exchange | FundType::Reits => matches!(suffix, "SH" | "SZ"),
+    };
+    if !valid {
+        return Err(ValidationError::new(
+            "thscode",
+            "market suffix does not match fund_type",
+        ));
+    }
+    Ok(())
+}
+
+fn validate_exchange_fund(thscode: &Thscode) -> Result<(), ValidationError> {
+    let (ticker, suffix) = thscode
+        .as_str()
+        .split_once('.')
+        .expect("validated thscode contains a suffix");
+    let valid = ticker.len() == 6
+        && ticker.bytes().all(|byte| byte.is_ascii_digit())
+        && matches!(suffix, "SH" | "SZ");
+    if !valid {
+        return Err(ValidationError::new(
+            "thscode",
+            "exchange fund code must be six digits ending in SH or SZ",
+        ));
+    }
+    Ok(())
+}
+
+fn validate_millis_range(start: UnixMillis, end: UnixMillis) -> Result<(), ValidationError> {
+    if end < start {
+        return Err(ValidationError::new(
+            "end",
+            "must not be earlier than start",
+        ));
+    }
+    Ok(())
+}
+
+fn validate_max_years(
+    start: UnixMillis,
+    end: UnixMillis,
+    years: i32,
+) -> Result<(), ValidationError> {
+    let start_datetime =
+        OffsetDateTime::from_unix_timestamp_nanos(i128::from(start.get()) * NANOS_PER_MILLISECOND)
+            .map_err(|_| {
+                ValidationError::new("start", "timestamp is outside the supported range")
+            })?;
+    let target_year = start_datetime
+        .year()
+        .checked_add(years)
+        .ok_or_else(|| ValidationError::new("end", "timestamp year overflowed"))?;
+    let limit = start_datetime
+        .replace_year(target_year)
+        .or_else(|_| start_datetime.replace_day(28)?.replace_year(target_year))
+        .map_err(|_| ValidationError::new("end", "could not calculate the year limit"))?;
+    if i128::from(end.get()) * NANOS_PER_MILLISECOND > limit.unix_timestamp_nanos() {
+        return Err(ValidationError::new(
+            "end",
+            "requested time window exceeds the endpoint year limit",
+        ));
+    }
+    Ok(())
 }
