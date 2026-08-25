@@ -1,3 +1,7 @@
+use std::fmt;
+
+use crate::ValidationError;
+
 /// A stable name and path for one supported REST capability.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct EndpointInfo {
@@ -76,4 +80,43 @@ define_endpoints! {
     FUND_PROFILE => ("fund_profile_detail", "/api/fund/profile/detail"),
     TICKERS_LIST => ("tickers_list", "/api/meta/tickers/list"),
     TICKERS_SEARCH => ("tickers_search", "/api/meta/tickers/search"),
+}
+
+pub(crate) fn join_values<T: fmt::Display>(
+    field: &'static str,
+    values: &[T],
+    maximum: Option<usize>,
+) -> Result<String, ValidationError> {
+    if values.is_empty() {
+        return Err(ValidationError::new(field, "must not be empty"));
+    }
+    if maximum.is_some_and(|maximum| values.len() > maximum) {
+        return Err(ValidationError::new(
+            field,
+            "contains more values than the endpoint allows",
+        ));
+    }
+    Ok(values
+        .iter()
+        .map(ToString::to_string)
+        .collect::<Vec<_>>()
+        .join(","))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::join_values;
+
+    #[test]
+    fn list_query_encoding_enforces_presence_and_optional_capacity() {
+        assert!(join_values::<u8>("values", &[], None).is_err());
+        assert_eq!(join_values("values", &[1, 2], Some(2)).unwrap(), "1,2");
+
+        let error = join_values("values", &[1, 2, 3], Some(2)).unwrap_err();
+        assert_eq!(error.field(), "values");
+        assert_eq!(
+            error.problem(),
+            "contains more values than the endpoint allows"
+        );
+    }
 }

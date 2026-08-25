@@ -59,6 +59,26 @@ impl Client {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::{TickerListRequest, TickerSearchRequest};
+    use crate::SearchQuery;
+
+    #[test]
+    fn request_builders_enforce_documented_page_bounds() {
+        let search = || TickerSearchRequest::new(SearchQuery::new("600519").unwrap());
+        assert!(search().limit(0).is_err());
+        assert!(search().limit(1).is_ok());
+        assert!(search().limit(50).is_ok());
+        assert!(search().limit(51).is_err());
+
+        assert!(TickerListRequest::new().page(0, 0).is_err());
+        assert!(TickerListRequest::new().page(1, 0).is_ok());
+        assert!(TickerListRequest::new().page(10_000, u32::MAX).is_ok());
+        assert!(TickerListRequest::new().page(10_001, 0).is_err());
+    }
+}
+
 /// Parameters for browsing the target code table.
 #[derive(Debug, Clone, Serialize)]
 pub struct TickerListRequest {

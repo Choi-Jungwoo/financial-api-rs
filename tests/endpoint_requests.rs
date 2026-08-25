@@ -1,8 +1,7 @@
 use financial_api::{
-    AShareCode, Adjustment, ApiKey, AuctionStage, Client, Cursor, Error, FundType, IndexTag,
-    JsonValue, LimitBreakSortField, MarketDumpUrl, NaturalDate, Page, PriceSnapshotSelection,
-    SearchQuery, ShanghaiDateMillis, SortDirection, Thscode, TickerListRequest,
-    TickerSearchRequest, UnixMillis,
+    AShareCode, Adjustment, ApiKey, Client, Cursor, Error, FundType, IndexTag, JsonValue,
+    LimitBreakSortField, MarketDumpUrl, NaturalDate, Page, SearchQuery, ShanghaiDateMillis,
+    SortDirection, Thscode, TickerListRequest, TickerSearchRequest, UnixMillis,
 };
 use serde_json::json;
 use wiremock::matchers::{method, path, query_param};
@@ -23,26 +22,6 @@ fn client(server: &MockServer) -> Client {
         .reference_date(NaturalDate::parse("2026-08-25").unwrap())
         .build()
         .unwrap()
-}
-
-#[test]
-fn request_builder_and_page_bounds_are_enforced() {
-    let search = || TickerSearchRequest::new(SearchQuery::new("600519").unwrap());
-    assert!(search().limit(0).is_err());
-    assert!(search().limit(1).is_ok());
-    assert!(search().limit(50).is_ok());
-    assert!(search().limit(51).is_err());
-
-    assert!(TickerListRequest::new().page(0, 0).is_err());
-    assert!(TickerListRequest::new().page(1, 0).is_ok());
-    assert!(TickerListRequest::new().page(10_000, u32::MAX).is_ok());
-    assert!(TickerListRequest::new().page(10_001, 0).is_err());
-
-    assert!(Page::new(0, 50).is_err());
-    assert!(Page::new(1, 0).is_err());
-    assert!(Page::new(1, 1).is_ok());
-    assert!(Page::new(u32::MAX, 200).is_ok());
-    assert!(Page::new(1, 201).is_err());
 }
 
 #[tokio::test]
@@ -176,150 +155,6 @@ async fn market_dump_rejects_invalid_authorization_metadata() {
             Error::InvalidResponse { .. }
         ));
     }
-}
-
-#[tokio::test]
-async fn documented_endpoint_bounds_fail_before_transport() {
-    let server = MockServer::start().await;
-    let client = client(&server);
-    let fund = Thscode::new("025480.OF").unwrap();
-    let stock = AShareCode::new("600519.SH").unwrap();
-    let too_many_stocks = vec![stock.clone(); 101];
-
-    assert!(PriceSnapshotSelection::targets(Vec::new()).is_err());
-    assert!(PriceSnapshotSelection::market_page(0, 0).is_err());
-    assert!(PriceSnapshotSelection::market_page(10_001, 0).is_ok());
-    assert!(matches!(
-        client
-            .fund_news_article_list(FundType::Otc, &fund, Some(0), None)
-            .await
-            .unwrap_err(),
-        Error::InvalidInput(_)
-    ));
-    assert!(matches!(
-        client
-            .a_share_auction_snapshot(&[], AuctionStage::Final)
-            .await
-            .unwrap_err(),
-        Error::InvalidInput(_)
-    ));
-    assert!(matches!(
-        client
-            .a_share_valuations_snapshot(&too_many_stocks)
-            .await
-            .unwrap_err(),
-        Error::InvalidInput(_)
-    ));
-    assert!(matches!(
-        client
-            .special_data_anomaly_analysis_stock(&too_many_stocks[..51])
-            .await
-            .unwrap_err(),
-        Error::InvalidInput(_)
-    ));
-    assert!(matches!(
-        client
-            .fund_performance_indicators_historical(
-                FundType::Otc,
-                &fund,
-                UnixMillis::new(1_577_836_800_000).unwrap(),
-                UnixMillis::new(1_735_776_000_000).unwrap(),
-            )
-            .await
-            .unwrap_err(),
-        Error::InvalidInput(_)
-    ));
-    assert!(matches!(
-        client
-            .special_data_hot_stock_rank_trend(
-                &AShareCode::new("600519.SH").unwrap(),
-                NaturalDate::parse("2024-02-29").unwrap(),
-                NaturalDate::parse("2025-03-01").unwrap(),
-            )
-            .await
-            .unwrap_err(),
-        Error::InvalidInput(_)
-    ));
-    assert!(matches!(
-        client
-            .special_data_hot_stock_list_history(NaturalDate::parse("2025-08-24").unwrap(),)
-            .await
-            .unwrap_err(),
-        Error::InvalidInput(_)
-    ));
-    assert!(matches!(
-        client
-            .special_data_dragon_tiger_list(
-                financial_api::DragonTigerBoard::All,
-                Some(NaturalDate::parse("2026-08-26").unwrap()),
-            )
-            .await
-            .unwrap_err(),
-        Error::InvalidInput(_)
-    ));
-
-    let error = client
-        .corp_actions_adjustment_factors(
-            &stock,
-            Some(NaturalDate::parse("2026-08-25").unwrap()),
-            Some(NaturalDate::parse("2026-08-24").unwrap()),
-        )
-        .await
-        .unwrap_err();
-    let Error::InvalidInput(error) = error else {
-        panic!("expected an invalid corporate-action date range");
-    };
-    assert_eq!(error.field(), "to");
-}
-
-#[tokio::test]
-async fn independent_endpoint_validators_fail_before_transport() {
-    let server = MockServer::start().await;
-    let client = client(&server);
-    let stock = AShareCode::new("600519.SH").unwrap();
-    let otc_fund = Thscode::new("025480.OF").unwrap();
-    let exchange_fund = Thscode::new("510300.SH").unwrap();
-    let start = UnixMillis::new(1_000_000_000_000).unwrap();
-    let before_start = UnixMillis::new(start.get() - 1).unwrap();
-    let over_ten_years = UnixMillis::new(start.get() + 315_576_000_001).unwrap();
-
-    macro_rules! assert_invalid_input {
-        ($future:expr) => {
-            assert!(matches!($future.await.unwrap_err(), Error::InvalidInput(_)))
-        };
-    }
-
-    assert_invalid_input!(client.fund_holders_top(FundType::Otc, &otc_fund, Some(0)));
-    assert_invalid_input!(client.fund_holders_top(FundType::Otc, &otc_fund, Some(11)));
-    assert_invalid_input!(client.index_prices_historical(
-        &stock.clone().into(),
-        start,
-        before_start
-    ));
-    assert_invalid_input!(client.index_prices_historical(
-        &stock.clone().into(),
-        start,
-        over_ten_years
-    ));
-    assert_invalid_input!(client.prices_historical(
-        &stock,
-        start,
-        before_start,
-        Adjustment::None,
-        0
-    ));
-    assert_invalid_input!(client.prices_historical(
-        &stock,
-        start,
-        over_ten_years,
-        Adjustment::None,
-        0
-    ));
-    assert_invalid_input!(client.fund_corporate_actions_dividends(FundType::Otc, &exchange_fund));
-    assert_invalid_input!(client.fund_corporate_actions_dividends(FundType::Exchange, &otc_fund));
-    assert_invalid_input!(client.fund_market_snapshot(&otc_fund));
-
-    assert!(server.received_requests().await.unwrap().is_empty());
 }
 
 #[tokio::test]

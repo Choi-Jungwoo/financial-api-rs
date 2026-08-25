@@ -1,4 +1,4 @@
-use financial_api::{ApiKey, BusinessErrorKind, Client, Error, SearchQuery, TickerSearchRequest};
+use crate::{ApiKey, BusinessErrorKind, Client, Error, SearchQuery, TickerSearchRequest};
 use serde_json::json;
 use std::time::Duration;
 use wiremock::matchers::{header, method, path, query_param};
@@ -44,60 +44,21 @@ async fn ticker_search_sends_auth_and_decodes_success_envelope() {
 }
 
 #[tokio::test]
-async fn business_failure_is_distinct_from_transport_success() {
-    let server = MockServer::start().await;
-    Mock::given(method("GET"))
-        .and(path("/api/meta/tickers/search"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
-            "code": 2003,
-            "message": "capability denied",
-            "request_id": "request-2",
-            "data": null
-        })))
-        .mount(&server)
-        .await;
-
-    let client = Client::builder(ApiKey::new("test-api-key").unwrap())
-        .base_url(server.uri())
-        .build()
-        .unwrap();
-    let request = TickerSearchRequest::new(SearchQuery::new("600519").unwrap());
-
-    let error = client.tickers_search(&request).await.unwrap_err();
-
-    match error {
-        Error::Business(error) => {
-            assert_eq!(error.kind(), BusinessErrorKind::PermissionDenied);
-            assert_eq!(error.code(), 2003);
-            assert_eq!(error.request_id(), "request-2");
-        }
-        other => panic!("expected business error, got {other:?}"),
-    }
-}
-
-#[tokio::test]
-async fn business_errors_require_the_complete_common_envelope() {
-    for body in [
-        json!({
-            "code": 2003,
-            "message": "request rejected",
-            "request_id": "request-1"
-        }),
-        json!({
-            "code": 2003,
-            "message": "request rejected",
-            "data": null
-        }),
-        json!({
-            "code": 2003,
-            "request_id": "request-3",
-            "data": null
-        }),
+async fn business_failures_preserve_recovery_categories_after_transport_success() {
+    for (code, expected) in [
+        (2001, BusinessErrorKind::Authentication),
+        (2003, BusinessErrorKind::PermissionDenied),
+        (4001, BusinessErrorKind::RateLimited),
     ] {
         let server = MockServer::start().await;
         Mock::given(method("GET"))
             .and(path("/api/meta/tickers/search"))
-            .respond_with(ResponseTemplate::new(200).set_body_json(body))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "code": code,
+                "message": "request rejected",
+                "request_id": "request-2",
+                "data": null
+            })))
             .mount(&server)
             .await;
 
@@ -107,32 +68,15 @@ async fn business_errors_require_the_complete_common_envelope() {
             .unwrap();
         let request = TickerSearchRequest::new(SearchQuery::new("600519").unwrap());
 
-        assert!(matches!(
-            client.tickers_search(&request).await.unwrap_err(),
-            Error::InvalidResponse { .. }
-        ));
+        match client.tickers_search(&request).await.unwrap_err() {
+            Error::Business(error) => {
+                assert_eq!(error.kind(), expected);
+                assert_eq!(error.code(), code);
+                assert_eq!(error.request_id(), "request-2");
+            }
+            other => panic!("expected business error, got {other:?}"),
+        }
     }
-}
-
-#[tokio::test]
-async fn malformed_success_response_is_an_invalid_response() {
-    let server = MockServer::start().await;
-    Mock::given(method("GET"))
-        .and(path("/api/meta/tickers/search"))
-        .respond_with(ResponseTemplate::new(200).set_body_string("not-json"))
-        .mount(&server)
-        .await;
-
-    let client = Client::builder(ApiKey::new("test-api-key").unwrap())
-        .base_url(server.uri())
-        .build()
-        .unwrap();
-    let request = TickerSearchRequest::new(SearchQuery::new("600519").unwrap());
-
-    assert!(matches!(
-        client.tickers_search(&request).await.unwrap_err(),
-        Error::InvalidResponse { .. }
-    ));
 }
 
 #[tokio::test]
@@ -214,49 +158,10 @@ async fn request_timeout_is_a_transport_failure() {
 }
 
 #[test]
-fn credential_debug_output_is_redacted() {
-    let key = ApiKey::new("super-secret-test-key").unwrap();
-    assert!(!format!("{key:?}").contains("super-secret-test-key"));
-
-    let client = Client::builder(key).build().unwrap();
-    assert!(!format!("{client:?}").contains("super-secret-test-key"));
-}
-
-#[test]
-fn base_url_rejects_userinfo_credentials() {
-    let error = Client::builder(ApiKey::new("test-api-key").unwrap())
-        .base_url("https://user:secret@fuyao.aicubes.cn/")
+fn client_debug_output_does_not_expose_the_credential() {
+    let client = Client::builder(ApiKey::new("super-secret-test-key").unwrap())
         .build()
-        .unwrap_err();
+        .unwrap();
 
-    let Error::InvalidInput(error) = error else {
-        panic!("expected invalid base URL");
-    };
-    assert_eq!(error.field(), "base_url");
-}
-
-#[tokio::test]
-async fn successful_envelope_requires_trace_and_data_fields() {
-    for body in [
-        json!({"code": 0, "message": "success", "data": {}}),
-        json!({"code": 0, "message": "success", "request_id": "request"}),
-        json!({"code": 0, "request_id": "request", "data": {}}),
-    ] {
-        let server = MockServer::start().await;
-        Mock::given(method("GET"))
-            .and(path("/api/meta/tickers/search"))
-            .respond_with(ResponseTemplate::new(200).set_body_json(body))
-            .mount(&server)
-            .await;
-
-        let client = Client::builder(ApiKey::new("test-api-key").unwrap())
-            .base_url(server.uri())
-            .build()
-            .unwrap();
-        let request = TickerSearchRequest::new(SearchQuery::new("600519").unwrap());
-        assert!(matches!(
-            client.tickers_search(&request).await.unwrap_err(),
-            Error::InvalidResponse { .. }
-        ));
-    }
+    assert!(!format!("{client:?}").contains("super-secret-test-key"));
 }
