@@ -27,3 +27,6 @@ run = "cargo package --list --allow-dirty"
 
 [tasks.publish-dry-run]
 run = "cargo publish --dry-run --allow-dirty"
+
+[tasks.publish]
+run = "cargo publish"
