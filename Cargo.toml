@@ -1,6 +1,15 @@
 [package]
-name = "financial-api-rs"
+name = "financial-api"
 version = "0.1.0"
 edition = "2024"
+description = "Rust client for the official Tonghuashun Financial Data REST API"
+license = "MIT"
+readme = "README.md"
+homepage = "https://fuyao.aicubes.cn/"
+documentation = "https://docs.rs/financial-api"
+keywords = ["finance", "stock-market", "a-share", "api-client", "tonghuashun"]
+categories = ["api-bindings", "finance"]
+publish = ["crates-io"]
+exclude = [".gitignore", "AGENTS.md", "CONTEXT.md", "docs/**", "mise.toml"]
 
 [dependencies]

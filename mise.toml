@@ -1,0 +1,20 @@
+[tools]
+rust = "latest"
+
+[tasks.fmt]
+run = "cargo fmt --all -- --check"
+
+[tasks.check]
+run = "cargo check --all-targets"
+
+[tasks.test]
+run = "cargo test --all-targets"
+
+[tasks.clippy]
+run = "cargo clippy --all-targets"
+
+[tasks.package-list]
+run = "cargo package --list --allow-dirty"
+
+[tasks.publish-dry-run]
+run = "cargo publish --dry-run --allow-dirty"

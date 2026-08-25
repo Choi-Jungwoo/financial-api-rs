@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "financial-api-rs"
+name = "financial-api"
 version = "0.1.0"
