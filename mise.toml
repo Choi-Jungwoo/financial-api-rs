@@ -1,5 +1,5 @@
 [tools]
-rust = "nightly-2026-08-16"
+rust = "latest"
 
 [tasks.fmt]
 run = "cargo fmt --all -- --check"
