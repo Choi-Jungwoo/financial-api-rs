@@ -20,11 +20,11 @@ pub use meta::{TickerListRequest, TickerSearchRequest};
 pub use models::*;
 pub use serde_json::Value as JsonValue;
 pub use types::{
-    AShareCode, Adjustment, AnomalyTag, AssetType, AuctionStage, CompactDate, CompanyId, Cursor,
-    DailyInterval, DragonTigerBoard, Exchange, FinancialAbilityKind, FinancialIndicatorId,
-    FinancialPeriod, FinancialRange, FinancialReport, FiscalPeriod, FundNavType, FundRange,
-    FundType, HolderMergeScope, HolderRecordScope, HotListPeriod, IndexTag, LimitBreakSortField,
-    LimitDownSortField, LimitUpSortField, ManagerId, ManagerPerformanceRange, NaturalDate,
-    OfferingStatus, Page, PortfolioAssetType, PreciseDecimal, RankTrend, ReportType, SearchQuery,
-    ShanghaiDateMillis, SortDirection, Thscode, UnixMillis,
+    AShareCode, Adjustment, AnomalyTag, AssetType, AuctionPhase, AuctionStage, CompactDate,
+    CompanyId, Cursor, DailyInterval, DragonTigerBoard, Exchange, FinancialAbilityKind,
+    FinancialIndicatorId, FinancialPeriod, FinancialRange, FinancialReport, FiscalPeriod,
+    FundCategoryCode, FundNavType, FundRange, FundType, HolderMergeScope, HolderRecordScope,
+    HotListPeriod, IndexTag, LimitBreakSortField, LimitDownSortField, LimitUpSortField, ManagerId,
+    ManagerPerformanceRange, NaturalDate, OfferingStatus, Page, PortfolioAssetType, PreciseDecimal,
+    RankTrend, ReportType, SearchQuery, ShanghaiDateMillis, SortDirection, Thscode, UnixMillis,
 };

@@ -70,6 +70,11 @@ identifier_type!(
     ReportType,
     "report_type"
 );
+identifier_type!(
+    /// Opaque fund category code observed in diagnostics data.
+    FundCategoryCode,
+    "fund_type"
+);
 
 /// Opaque pagination cursor returned by a cursor-paged endpoint.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, derive_more::Display)]
@@ -185,7 +190,7 @@ wire_enum! {
 
 #[cfg(test)]
 mod tests {
-    use super::{CompanyId, Cursor, ManagerId, ReportType};
+    use super::{CompanyId, Cursor, FundCategoryCode, ManagerId, ReportType};
 
     #[test]
     fn endpoint_identifiers_have_distinct_validated_types() {
@@ -196,6 +201,10 @@ mod tests {
             "opaque+/cursor=="
         );
         assert_eq!(ReportType::new("quarter").unwrap().as_str(), "quarter");
+        assert_eq!(
+            FundCategoryCode::new("282001003").unwrap().as_str(),
+            "282001003"
+        );
         assert_eq!(ManagerId::new(" manager-1 ").unwrap().as_str(), "manager-1");
         assert_eq!(
             CompanyId::new("\tcompany-1\n").unwrap().as_str(),
@@ -211,5 +220,6 @@ mod tests {
         assert!(CompanyId::new("").is_err());
         assert!(Cursor::new("\t").is_err());
         assert!(ReportType::new("\n").is_err());
+        assert!(FundCategoryCode::new(" ").is_err());
     }
 }

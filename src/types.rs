@@ -9,7 +9,7 @@ mod target;
 mod wire;
 
 pub use a_share::{
-    AnomalyTag, AuctionStage, DragonTigerBoard, HotListPeriod, LimitBreakSortField,
+    AnomalyTag, AuctionPhase, AuctionStage, DragonTigerBoard, HotListPeriod, LimitBreakSortField,
     LimitDownSortField, LimitUpSortField, Page, RankTrend, SortDirection,
 };
 pub use decimal::PreciseDecimal;
@@ -18,8 +18,9 @@ pub use finance::{
     FiscalPeriod,
 };
 pub use fund::{
-    CompanyId, Cursor, FundNavType, FundRange, FundType, HolderMergeScope, HolderRecordScope,
-    ManagerId, ManagerPerformanceRange, OfferingStatus, PortfolioAssetType, ReportType,
+    CompanyId, Cursor, FundCategoryCode, FundNavType, FundRange, FundType, HolderMergeScope,
+    HolderRecordScope, ManagerId, ManagerPerformanceRange, OfferingStatus, PortfolioAssetType,
+    ReportType,
 };
 pub use index::IndexTag;
 pub use market_data::{Adjustment, DailyInterval};

@@ -1,9 +1,82 @@
 use serde_json::json;
 
 use crate::{
-    FundHoldersData, FundManagerDetailData, FundMarketHistoricalData, FundMarketSnapshotData,
-    FundNavData, FundPortfolioHistoryData,
+    FundAssetAllocationData, FundDiagnosticsData, FundHoldersData, FundManagerDetailData,
+    FundMarketHistoricalData, FundMarketSnapshotData, FundNavData, FundPortfolioHistoryData,
+    FundProfileData,
 };
+
+#[test]
+fn profile_preserves_unit_bearing_rate_text() {
+    let profile: FundProfileData = serde_json::from_value(json!({
+        "timestamp": 1_i64,
+        "item": [{
+            "thscode": "025480.OF",
+            "ticker": "025480",
+            "rate_info": [
+                {
+                    "rate_type": "purchase",
+                    "standard_rate": "1.20%",
+                    "discounted_rate": "0.12%"
+                },
+                {
+                    "rate_type": "purchase",
+                    "standard_rate": "500元/笔",
+                    "discounted_rate": "500元/笔"
+                }
+            ]
+        }]
+    }))
+    .unwrap();
+
+    assert_eq!(
+        profile.item[0].rate_info[0].discounted_rate.as_deref(),
+        Some("0.12%")
+    );
+    assert_eq!(
+        profile.item[0].rate_info[1].standard_rate.as_deref(),
+        Some("500元/笔")
+    );
+}
+
+#[test]
+fn diagnostics_preserves_the_observed_fund_category_code() {
+    let diagnostics: FundDiagnosticsData = serde_json::from_value(json!({
+        "timestamp": 1_i64,
+        "item": [{
+            "thscode": "025480.OF",
+            "ticker": "025480",
+            "fund_type": "282001003",
+            "peer_code": "000300.SH",
+            "dimensions": [],
+            "peer_dimensions": [],
+            "probabilities": [],
+            "ranges": [],
+            "resilience": [],
+            "peer_resilience": []
+        }]
+    }))
+    .unwrap();
+
+    assert_eq!(diagnostics.item[0].fund_type.as_str(), "282001003");
+}
+
+#[test]
+fn asset_allocation_preserves_a_missing_report_date() {
+    let allocation: FundAssetAllocationData = serde_json::from_value(json!({
+        "timestamp": 1_i64,
+        "item": [{
+            "report_date_ms": null,
+            "stock_ratio_pct": 90.34,
+            "bond_ratio_pct": 0,
+            "deposit_ratio_pct": 9.25,
+            "other_ratio_pct": 0.4
+        }]
+    }))
+    .unwrap();
+
+    assert_eq!(allocation.item[0].report_date_ms, None);
+}
 
 #[test]
 fn historical_response_preserves_the_documented_adjustment_marker() {
@@ -99,7 +172,30 @@ fn manager_detail_requires_the_documented_radar_collection() {
     .unwrap();
 
     let radar = &detail.item[0].radar_comparison[0];
-    assert_eq!(radar.fund_category, "equity");
-    assert_eq!(radar.horizon, "year");
-    assert_eq!(radar.manager_scores["annual_return"], json!(80));
+    assert_eq!(radar.fund_category.as_deref(), Some("equity"));
+    assert_eq!(radar.horizon.as_deref(), Some("year"));
+    assert_eq!(
+        radar.manager_scores.as_ref().unwrap()["annual_return"],
+        json!(80)
+    );
+}
+
+#[test]
+fn manager_detail_preserves_incomplete_radar_placeholders() {
+    let detail: FundManagerDetailData = serde_json::from_value(json!({
+        "timestamp": 1_i64,
+        "item": [{
+            "manager_id": "H002417139",
+            "manager_name": "测试经理",
+            "radar_comparison": [{}]
+        }]
+    }))
+    .unwrap();
+
+    let radar = &detail.item[0].radar_comparison[0];
+    assert_eq!(radar.fund_category, None);
+    assert_eq!(radar.horizon, None);
+    assert_eq!(radar.manager_metrics, None);
+    assert_eq!(radar.manager_scores, None);
+    assert_eq!(radar.peer_average_scores, None);
 }

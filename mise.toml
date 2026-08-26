@@ -13,6 +13,53 @@ run = "cargo check --all-targets"
 [tasks.test]
 run = "cargo test --all-targets"
 
+[tasks.test-examples-live]
+description = "Run every example against the live API using .env credentials"
+run = '''
+cargo build --examples
+passed=0
+failed=0
+while IFS= read -r example; do
+  name="${example#examples/}"
+  name="${name%.rs}"
+  attempt=1
+  status=1
+  while test "${attempt}" -le 3; do
+    if output="$(cargo run --quiet --example "${name}" 2>&1)"; then
+      status=0
+      break
+    else
+      status=$?
+    fi
+    case "${output}" in
+      *"code: 3001"*|*"code: 4001"*|*"code: 5002"*|*"code: 5003"*|*"status: 429"*)
+        if test "${attempt}" -lt 3; then
+          echo "RETRY ${name} after transient upstream failure"
+          sleep $((attempt * 2))
+        fi
+        ;;
+      *)
+        break
+        ;;
+    esac
+    attempt=$((attempt + 1))
+  done
+  if test "${status}" -eq 0; then
+    passed=$((passed + 1))
+    echo "PASS ${name}"
+  else
+    failed=$((failed + 1))
+    echo "FAIL ${name}"
+    echo "${output}"
+  fi
+  sleep 2
+done <<EOF
+$(rg --files examples -g '*.rs' | rg -v '^examples/configuration/' | sort)
+EOF
+echo "live examples: ${passed} passed, ${failed} failed"
+test "${failed}" -eq 0
+'''
+
 [tasks.clippy]
 run = "cargo clippy --all-targets -- -D warnings"
 

@@ -1,7 +1,7 @@
 use serde::Deserialize;
 
 use crate::{
-    Adjustment, CompanyId, Cursor, DailyInterval, FundType, HolderRecordScope, ManagerId,
+    Adjustment, CompanyId, Cursor, DailyInterval, FundCategoryCode, HolderRecordScope, ManagerId,
     PortfolioAssetType, ReportType, Thscode, UnixMillis,
 };
 
@@ -51,8 +51,8 @@ pub struct FundRateInfo {
     pub rate_type: Option<String>,
     pub charge_mode: Option<String>,
     pub condition: Option<String>,
-    pub standard_rate: Option<f64>,
-    pub discounted_rate: Option<f64>,
+    pub standard_rate: Option<String>,
+    pub discounted_rate: Option<String>,
 }
 
 pub type FundProfileData = TimestampedItems<FundProfileItem>;
@@ -198,7 +198,7 @@ pub type FundDiagnosticsData = TimestampedItems<FundDiagnosticsItem>;
 pub struct FundDiagnosticsItem {
     pub thscode: Thscode,
     pub ticker: String,
-    pub fund_type: FundType,
+    pub fund_type: FundCategoryCode,
     pub peer_code: String,
     pub dimensions: serde_json::Value,
     pub peer_dimensions: serde_json::Value,
@@ -377,11 +377,11 @@ pub struct FundManagerDetailItem {
 /// One manager-versus-peer radar node aligned by category and horizon.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct FundManagerRadarComparison {
-    pub fund_category: String,
-    pub horizon: String,
-    pub manager_metrics: serde_json::Value,
-    pub manager_scores: serde_json::Value,
-    pub peer_average_scores: serde_json::Value,
+    pub fund_category: Option<String>,
+    pub horizon: Option<String>,
+    pub manager_metrics: Option<serde_json::Value>,
+    pub manager_scores: Option<serde_json::Value>,
+    pub peer_average_scores: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
@@ -479,7 +479,7 @@ pub type FundAssetAllocationData = TimestampedItems<FundAssetAllocationItem>;
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct FundAssetAllocationItem {
-    pub report_date_ms: UnixMillis,
+    pub report_date_ms: Option<UnixMillis>,
     pub stock_ratio_pct: Option<f64>,
     pub bond_ratio_pct: Option<f64>,
     pub deposit_ratio_pct: Option<f64>,

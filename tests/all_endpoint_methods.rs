@@ -794,7 +794,7 @@ async fn every_catalogued_endpoint_has_an_executable_typed_client_method() {
             );
             $apply!(
                 $api.special_data_limit_up_ladder(),
-                data => data.item[0].date.to_string() == "20260825"
+                data => data.item[0].date.to_string() == "2026-08-25"
             );
             $apply!(
                 $api.special_data_skyrocket_list(HotListPeriod::Hour),
@@ -853,7 +853,7 @@ async fn every_catalogued_endpoint_has_an_executable_typed_client_method() {
             );
             $apply!(
                 $api.fund_managers_detail(&manager_id),
-                data => data.item[0].radar_comparison[0].fund_category == "equity"
+                data => data.item[0].radar_comparison[0].fund_category.as_deref() == Some("equity")
             );
             $apply!(
                 $api.fund_market_snapshot(&exchange_fund),

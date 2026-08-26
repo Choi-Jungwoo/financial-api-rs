@@ -1,9 +1,9 @@
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 
 use crate::{
-    AShareCode, AuctionStage, CompactDate, DragonTigerBoard, FinancialAbilityKind,
+    AShareCode, AuctionPhase, CompactDate, DragonTigerBoard, FinancialAbilityKind,
     FinancialIndicatorId, FinancialPeriod, FinancialReport, FiscalPeriod, NaturalDate,
-    PreciseDecimal, RankTrend, UnixMillis,
+    PreciseDecimal, RankTrend, UnixMillis, ValidationError,
 };
 
 use super::TimestampedItems;
@@ -120,7 +120,7 @@ pub struct TradingDayItem {
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct AuctionSnapshotData {
     pub timestamp: UnixMillis,
-    pub auction_phase: AuctionStage,
+    pub auction_phase: AuctionPhase,
     pub data_status: String,
     pub total: u64,
     pub item: Vec<AuctionSnapshotItem>,
@@ -350,7 +350,8 @@ pub struct LadderData {
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct LadderWindow {
     pub length: u64,
-    pub date_list: Vec<CompactDate>,
+    #[serde(deserialize_with = "deserialize_ladder_dates")]
+    pub date_list: Vec<NaturalDate>,
     pub board_caps: LadderBoardCaps,
 }
 
@@ -366,7 +367,8 @@ pub struct LadderBoardCaps {
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct LadderDay {
-    pub date: CompactDate,
+    #[serde(deserialize_with = "deserialize_ladder_date")]
+    pub date: NaturalDate,
     pub boards: LadderBoards,
 }
 
@@ -388,4 +390,33 @@ pub struct LadderStock {
     pub board_num: u64,
     pub seal_nextday: Option<bool>,
     pub sign_level: u64,
+}
+
+fn deserialize_ladder_dates<'de, D>(deserializer: D) -> Result<Vec<NaturalDate>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Vec::<String>::deserialize(deserializer)?
+        .into_iter()
+        .map(|value| parse_ladder_date(&value).map_err(serde::de::Error::custom))
+        .collect()
+}
+
+fn deserialize_ladder_date<'de, D>(deserializer: D) -> Result<NaturalDate, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value = String::deserialize(deserializer)?;
+    parse_ladder_date(&value).map_err(serde::de::Error::custom)
+}
+
+fn parse_ladder_date(value: &str) -> Result<NaturalDate, ValidationError> {
+    match value.len() {
+        8 => CompactDate::parse(value).map(CompactDate::natural_date),
+        10 => NaturalDate::parse(value),
+        _ => Err(ValidationError::new(
+            "date",
+            "must use YYYYMMDD or YYYY-MM-DD format",
+        )),
+    }
 }

@@ -107,8 +107,13 @@ wire_enum! {
     pub enum FinancialIndicatorId {
         TotalAssetsGrowthRatio => "total_assets_growth_ratio",
         NetProfitYoyGrowthRatio => "net_profit_yoy_growth_ratio",
+        #[serde(alias = "calculate_operating_income_yoy_growth_ratio")]
         OperatingIncomeYoyGrowthRatio => "operating_income_yoy_growth_ratio",
+        #[serde(alias = "calculate_operating_profit_yoy_growth_ratio")]
         OperatingProfitYoyGrowthRatio => "operating_profit_yoy_growth_ratio",
+        FixedAssetInvestExpansionRatio => "fixed_asset_invest_expansion_ratio",
+        #[serde(alias = "calculate_parent_holder_net_profit_yoy_growth_ratio")]
+        ParentHolderNetProfitYoyGrowthRatio => "parent_holder_net_profit_yoy_growth_ratio",
         SaleGrossMargin => "sale_gross_margin",
         SaleNetInterestRatio => "sale_net_interest_ratio",
         TotalAssetsNetRatio => "total_assets_net_ratio",

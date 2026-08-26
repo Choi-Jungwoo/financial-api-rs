@@ -105,6 +105,13 @@ JSON。全市场导出接口返回 `MarketDumpUrl`；其中预签名 URL 包装�
 估值端点的十进制数使用 `PreciseDecimal` 保留 JSON 源数字，不经过二进制浮点转换；可通过
 `Display` 或 `as_number()` 读取其无损表示。
 
+## 0.2 API 调整
+
+为保留实时上游的实际响应语义，`AuctionSnapshotData::auction_phase` 改用响应专用的
+`AuctionPhase`；涨停天梯日期统一为 `NaturalDate`；基金费率保留为带单位的文本；诊断分类
+改用 `FundCategoryCode`；资产配置报告日和经理雷达节点字段改为可选值。迁移时应同步调整
+显式类型标注，并在读取可选字段前处理 `None`。
+
 ## 领域类型
 
 - `Thscode` 表示带市场后缀的完整标的代码。
@@ -147,6 +154,8 @@ mise run doc-test
 ```
 
 默认测试只使用本地 mock server，不需要网络、真实账号或 API Key。
+配置 `.env` 后，可用 `mise run test-examples-live` 顺序执行全部 59 个实时示例；任务会在请求
+之间留出间隔，并在结束时汇总成功和失败数量。
 
 ## 契约与边界
 

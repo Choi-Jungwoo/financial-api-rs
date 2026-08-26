@@ -2,10 +2,19 @@ use super::wire::wire_enum;
 use crate::ValidationError;
 
 wire_enum! {
-    /// Auction observation stage.
+    /// Auction stage accepted by a snapshot request.
     pub enum AuctionStage {
         Live => "live",
         Final => "final",
+    }
+}
+
+wire_enum! {
+    /// Auction phase observed in a snapshot response.
+    pub enum AuctionPhase {
+        Live => "live",
+        Final => "final",
+        Closed => "closed",
     }
 }
 

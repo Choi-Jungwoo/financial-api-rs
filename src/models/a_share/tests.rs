@@ -1,9 +1,68 @@
 use serde_json::json;
 
 use crate::{
-    FinancialIndicatorsData, HotStockData, IncomeStatementsData, LadderData, TradingDaysData,
-    ValuationsData,
+    AuctionSnapshotData, FinancialIndicatorsData, HotStockData, IncomeStatementsData, LadderData,
+    TradingDaysData, ValuationsData,
 };
+
+#[test]
+fn auction_snapshot_accepts_the_observed_closed_response_phase() {
+    let snapshot: AuctionSnapshotData = serde_json::from_value(json!({
+        "timestamp": 1_i64,
+        "auction_phase": "closed",
+        "data_status": "final",
+        "total": 0,
+        "item": []
+    }))
+    .unwrap();
+
+    assert_eq!(snapshot.auction_phase.as_str(), "closed");
+}
+
+#[test]
+fn financial_indicators_accept_observed_upstream_identifiers() {
+    let indicators: FinancialIndicatorsData = serde_json::from_value(json!({
+        "thscode": "600519.SH",
+        "report": "2025-4",
+        "abilities": [{
+            "ability": "growth",
+            "indicators": [
+                {
+                    "index_id": "calculate_operating_income_yoy_growth_ratio",
+                    "value": "-1.20600400"
+                },
+                {
+                    "index_id": "calculate_operating_profit_yoy_growth_ratio",
+                    "value": "-4.07693800"
+                },
+                {
+                    "index_id": "fixed_asset_invest_expansion_ratio",
+                    "value": "2.81954600"
+                },
+                {
+                    "index_id": "calculate_parent_holder_net_profit_yoy_growth_ratio",
+                    "value": "-4.53225500"
+                }
+            ]
+        }]
+    }))
+    .unwrap();
+
+    let identifiers = indicators.abilities[0]
+        .indicators
+        .iter()
+        .map(|indicator| indicator.index_id.as_str())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        identifiers,
+        [
+            "operating_income_yoy_growth_ratio",
+            "operating_profit_yoy_growth_ratio",
+            "fixed_asset_invest_expansion_ratio",
+            "parent_holder_net_profit_yoy_growth_ratio",
+        ]
+    );
+}
 
 #[test]
 fn finite_response_states_reject_unknown_wire_values() {
@@ -79,6 +138,55 @@ fn compact_wire_dates_are_validated_at_deserialization() {
         "item": []
     });
     assert!(serde_json::from_value::<LadderData>(ladder).is_err());
+}
+
+#[test]
+fn ladder_accepts_observed_hyphenated_natural_dates() {
+    let ladder: LadderData = serde_json::from_value(json!({
+        "timestamp": 1_i64,
+        "window": {
+            "length": 2,
+            "date_list": ["2026-08-26", "20260825"],
+            "board_caps": {
+                "two_board": 4,
+                "three_board": 4,
+                "four_board": 4,
+                "five_board": 2,
+                "six_board": 1,
+                "seven_over": 1
+            }
+        },
+        "item": [
+            {
+                "date": "2026-08-26",
+                "boards": {
+                    "two_board": [],
+                    "three_board": [],
+                    "four_board": [],
+                    "five_board": [],
+                    "six_board": [],
+                    "seven_over": []
+                }
+            },
+            {
+                "date": "20260825",
+                "boards": {
+                    "two_board": [],
+                    "three_board": [],
+                    "four_board": [],
+                    "five_board": [],
+                    "six_board": [],
+                    "seven_over": []
+                }
+            }
+        ]
+    }))
+    .unwrap();
+
+    assert_eq!(ladder.window.date_list[0].to_string(), "2026-08-26");
+    assert_eq!(ladder.window.date_list[1].to_string(), "2026-08-25");
+    assert_eq!(ladder.item[0].date.to_string(), "2026-08-26");
+    assert_eq!(ladder.item[1].date.to_string(), "2026-08-25");
 }
 
 #[test]

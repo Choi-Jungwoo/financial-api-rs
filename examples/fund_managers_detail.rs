@@ -1,13 +1,12 @@
 #[path = "configuration/client.rs"]
 mod example_client;
-
-use financial_api::ManagerId;
+#[path = "configuration/fund.rs"]
+mod example_fund;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = example_client::from_env()?;
-    // Replace this with a manager_id returned by fund_profile_detail.
-    let manager_id = ManagerId::new("manager-001")?;
+    let manager_id = example_fund::manager_id(&client).await?;
     let response = client.fund_managers_detail(&manager_id).await?;
 
     println!("request_id={}", response.request_id());

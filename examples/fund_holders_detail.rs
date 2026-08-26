@@ -6,7 +6,7 @@ use financial_api::{FundType, HolderMergeScope, Thscode};
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = example_client::from_env()?;
-    let fund = Thscode::new("025480.OF")?;
+    let fund = Thscode::new("000037.OF")?;
     let response = client
         .fund_holders_detail(FundType::Otc, &fund, HolderMergeScope::All)
         .await?;
