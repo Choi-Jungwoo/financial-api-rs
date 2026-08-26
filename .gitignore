@@ -1,4 +1,6 @@
 /target
+.env
+.env.*
 /CLAUDE.md
 /AGENTS.md
 /CONTEXT.md

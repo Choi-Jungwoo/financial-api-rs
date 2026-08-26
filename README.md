@@ -56,6 +56,27 @@ fn client() -> Result<Client, Error> {
 `ApiKey` 的调试输出始终脱敏，底层 HTTP Header 也被标记为敏感。不要在业务日志中自行输出
 原始凭据。
 
+## 端点示例
+
+`examples/` 为当前支持的 59 个端点分别提供了可运行示例。文件名与
+`SUPPORTED_ENDPOINTS` 中的端点名称一致，例如：
+
+```shell
+cargo run --example tickers_search
+cargo run --example prices_historical
+cargo run --example fund_performance_nav
+cargo run --example market_dump_daily_k
+```
+
+示例会先尝试从仓库根目录的 `.env` 加载凭证，也兼容已经由 shell 设置的环境变量：
+
+```dotenv
+HITHINK_FINANCE_API_KEY='<your-api-key>'
+```
+
+这些示例会访问真实上游服务，需要相应账号权限和网络连接。开发质量门中的
+`mise run check` 会编译全部示例，但不会发送网络请求。
+
 ## 响应与错误
 
 所有端点先检查统一业务信封。HTTP 200 但 `code != 0` 会返回 `Error::Business`，不会被误当
