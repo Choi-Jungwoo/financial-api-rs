@@ -56,27 +56,27 @@ macro_rules! identifier_type {
 }
 
 identifier_type!(
-    /// Opaque fund-manager identifier discovered from fund profile data.
+    /// 从基金资料数据中发现的不透明基金经理标识。
     ManagerId,
     "manager_id"
 );
 identifier_type!(
-    /// Opaque fund-company identifier discovered from fund profile data.
+    /// 从基金资料数据中发现的不透明基金公司标识。
     CompanyId,
     "company_id"
 );
 identifier_type!(
-    /// Fund disclosure report type discovered from a report-dates endpoint.
+    /// 从报告期端点中发现的基金披露报告类型。
     ReportType,
     "report_type"
 );
 identifier_type!(
-    /// Opaque fund category code observed in diagnostics data.
+    /// 在诊断数据中观察到的不透明基金分类代码。
     FundCategoryCode,
     "fund_type"
 );
 
-/// Opaque pagination cursor returned by a cursor-paged endpoint.
+/// 游标分页端点返回的不透明分页游标。
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, derive_more::Display)]
 #[serde(transparent)]
 pub struct Cursor(String);
@@ -112,7 +112,7 @@ impl<'de> Deserialize<'de> for Cursor {
 }
 
 wire_enum! {
-    /// Fund target universe.
+    /// 基金标的宇宙。
     pub enum FundType {
         Otc => "otc",
         Exchange => "exchange",
@@ -121,7 +121,7 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// Holder record merge policy.
+    /// 持有人记录合并策略。
     pub enum HolderMergeScope {
         All => "all",
         Merged => "merged",
@@ -130,7 +130,7 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// Fund NAV history range.
+    /// 基金历史净值区间。
     pub enum FundRange {
         Week => "week",
         Month => "month",
@@ -144,7 +144,7 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// Fund NAV series selection.
+    /// 基金净值序列选择。
     pub enum FundNavType {
         Unit => "unit",
         Adjusted => "adj",
@@ -153,7 +153,7 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// Fund manager performance range.
+    /// 基金经理业绩区间。
     pub enum ManagerPerformanceRange {
         Month => "month",
         ThreeMonths => "tmonth",
@@ -164,7 +164,7 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// New fund offering subscription state.
+    /// 新发基金认购状态。
     pub enum OfferingStatus {
         Active => "active",
         Upcoming => "upcoming",
@@ -172,7 +172,7 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// Actual disclosure scope returned for a fund-holder record.
+    /// 基金持有人记录返回的实际披露范围。
     pub enum HolderRecordScope {
         Merged => "merged",
         Separate => "separate",
@@ -180,7 +180,7 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// Asset class used in a disclosed fund portfolio.
+    /// 基金持仓披露使用的资产类别。
     pub enum PortfolioAssetType {
         Stock => "stock",
         Bond => "bond",

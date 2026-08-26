@@ -4,7 +4,14 @@ use crate::{Client, Cursor, Error, FundNewsData, FundType, Response, Thscode, Va
 use super::FundTarget;
 
 impl Client {
-    /// Fetch cursor-paged fund news.
+    /// 按不透明游标分页获取基金新闻。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_news_article_list.rs"),
+        "\n```"
+    )]
     pub async fn fund_news_article_list(
         &self,
         fund_type: FundType,

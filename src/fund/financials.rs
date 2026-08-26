@@ -5,7 +5,14 @@ use crate::{
 };
 
 impl Client {
-    /// Fetch fund financial indicators.
+    /// 获取基金财务指标。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_financials_indicators.rs"),
+        "\n```"
+    )]
     pub async fn fund_financials_indicators(
         &self,
         fund_type: FundType,
@@ -15,7 +22,14 @@ impl Client {
             .await
     }
 
-    /// Fetch fund income statements.
+    /// 获取基金利润表。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_financials_income_statements.rs"),
+        "\n```"
+    )]
     pub async fn fund_financials_income_statements(
         &self,
         fund_type: FundType,
@@ -25,7 +39,14 @@ impl Client {
             .await
     }
 
-    /// Fetch fund balance sheets.
+    /// 获取基金资产负债表。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_financials_balance_sheets.rs"),
+        "\n```"
+    )]
     pub async fn fund_financials_balance_sheets(
         &self,
         fund_type: FundType,

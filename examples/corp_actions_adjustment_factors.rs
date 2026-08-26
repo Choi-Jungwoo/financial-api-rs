@@ -1,11 +1,13 @@
-#[path = "configuration/client.rs"]
-mod example_client;
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/examples/configuration/client.rs"
+));
 
 use financial_api::{AShareCode, NaturalDate};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = example_client::from_env()?;
+    let client = from_env()?;
     let target = AShareCode::new("600519.SH")?;
     let from = NaturalDate::parse("2026-01-01")?;
     let to = NaturalDate::parse("2026-08-25")?;

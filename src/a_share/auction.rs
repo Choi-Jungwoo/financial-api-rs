@@ -6,7 +6,14 @@ use crate::{
 };
 
 impl Client {
-    /// Fetch auction snapshots for one or more A-share targets.
+    /// 获取一个或多个 A 股标的的集合竞价快照。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/a_share_auction_snapshot.rs"),
+        "\n```"
+    )]
     pub async fn a_share_auction_snapshot(
         &self,
         thscodes: &[AShareCode],
@@ -19,7 +26,14 @@ impl Client {
         self.get(endpoints::AUCTION_SNAPSHOT, &query).await
     }
 
-    /// Fetch the short-term auction benchmark, optionally for a natural day.
+    /// 获取集合竞价短线基准，可指定自然日。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/a_share_auction_short_term_benchmark.rs"),
+        "\n```"
+    )]
     pub async fn a_share_auction_short_term_benchmark(
         &self,
         date: Option<NaturalDate>,

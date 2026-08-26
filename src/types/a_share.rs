@@ -2,7 +2,7 @@ use super::wire::wire_enum;
 use crate::ValidationError;
 
 wire_enum! {
-    /// Auction stage accepted by a snapshot request.
+    /// 集合竞价快照请求接受的阶段。
     pub enum AuctionStage {
         Live => "live",
         Final => "final",
@@ -10,7 +10,7 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// Auction phase observed in a snapshot response.
+    /// 集合竞价快照响应中的阶段。
     pub enum AuctionPhase {
         Live => "live",
         Final => "final",
@@ -19,7 +19,7 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// A-share anomaly tag.
+    /// A 股异动标签。
     pub enum AnomalyTag {
         LimitUp => "LIMIT_UP",
         LimitDown => "LIMIT_DOWN",
@@ -31,7 +31,7 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// Ranking aggregation period.
+    /// 排名聚合周期。
     pub enum HotListPeriod {
         Day => "day",
         Hour => "hour",
@@ -39,7 +39,7 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// Dragon-tiger list board filter.
+    /// 龙虎榜榜单筛选条件。
     pub enum DragonTigerBoard {
         All => "all",
         Organization => "org",
@@ -48,7 +48,7 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// Sort direction used by paged special-data pools.
+    /// 特色数据分页池使用的排序方向。
     pub enum SortDirection {
         Ascending => "asc",
         Descending => "desc",
@@ -56,7 +56,7 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// Sort key for the limit-up pool.
+    /// 涨停池排序字段。
     pub enum LimitUpSortField {
         LastPrice => "last_price",
         ConsecutiveDays => "continue_day_cnt",
@@ -66,7 +66,7 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// Sort key for the limit-down pool.
+    /// 跌停池排序字段。
     pub enum LimitDownSortField {
         LastLimitTime => "last_limit_time",
         FirstLimitTime => "first_limit_time",
@@ -77,7 +77,7 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// Sort key for the limit-break pool.
+    /// 炸板池排序字段。
     pub enum LimitBreakSortField {
         PriceChangeRatio => "price_change_ratio_pct",
         OpenTimes => "open_times",
@@ -87,7 +87,7 @@ wire_enum! {
     }
 }
 
-/// Validated pagination for special-data pools.
+/// 特色数据池使用的已校验分页参数。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Page {
     number: u32,
@@ -126,7 +126,7 @@ impl Default for Page {
 }
 
 wire_enum! {
-    /// Direction of a hot-list rank change.
+    /// 热榜排名变化方向。
     pub enum RankTrend {
         Up => "up",
         Down => "down",

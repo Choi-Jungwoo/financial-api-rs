@@ -1,4 +1,4 @@
-/// A request-domain or client configuration value was invalid.
+/// 请求领域值或客户端配置值无效。
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 #[error("invalid {field}: {problem}")]
 pub struct ValidationError {
@@ -11,20 +11,20 @@ impl ValidationError {
         Self { field, problem }
     }
 
-    /// The invalid field.
+    /// 无效字段。
     #[must_use]
     pub const fn field(&self) -> &'static str {
         self.field
     }
 
-    /// A stable description of the violated constraint.
+    /// 对违反约束的稳定描述。
     #[must_use]
     pub const fn problem(&self) -> &'static str {
         self.problem
     }
 }
 
-/// Stable recovery category for an upstream non-zero business result.
+/// 上游非零业务结果对应的稳定恢复类别。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum BusinessErrorKind {
@@ -39,7 +39,7 @@ pub enum BusinessErrorKind {
     Other,
 }
 
-/// A decoded non-zero business result from the response envelope.
+/// 从响应信封中解码出的非零业务结果。
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 #[error("upstream business request failed with code {code}")]
 pub struct BusinessError {
@@ -57,25 +57,25 @@ impl BusinessError {
         }
     }
 
-    /// Numeric business result code returned by the service.
+    /// 服务返回的数字业务结果码。
     #[must_use]
     pub const fn code(&self) -> i64 {
         self.code
     }
 
-    /// Upstream result description.
+    /// 上游结果描述。
     #[must_use]
     pub fn message(&self) -> &str {
         &self.message
     }
 
-    /// Upstream request trace identifier.
+    /// 上游请求追踪标识。
     #[must_use]
     pub fn request_id(&self) -> &str {
         &self.request_id
     }
 
-    /// Recovery-oriented classification of [`Self::code`].
+    /// 面向恢复动作的 [`Self::code`] 分类。
     #[must_use]
     pub const fn kind(&self) -> BusinessErrorKind {
         match self.code {
@@ -92,7 +92,7 @@ impl BusinessError {
     }
 }
 
-/// Failures produced while configuring or calling the API.
+/// 配置或调用 API 时产生的失败。
 #[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 pub enum Error {

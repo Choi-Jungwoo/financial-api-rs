@@ -371,7 +371,7 @@ pub struct FundManagerDetailItem {
     pub radar_comparison: Vec<FundManagerRadarComparison>,
 }
 
-/// One manager-versus-peer radar node aligned by category and horizon.
+/// 按类别和区间对齐的一项基金经理同类比较雷达节点。
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct FundManagerRadarComparison {
     pub fund_category: Option<String>,

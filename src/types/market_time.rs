@@ -7,7 +7,7 @@ use time::{Date, Time};
 
 use crate::ValidationError;
 
-/// Non-negative Unix timestamp in milliseconds.
+/// 非负 Unix 毫秒时间戳。
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, derive_more::Display,
 )]
@@ -38,7 +38,7 @@ impl<'de> Deserialize<'de> for UnixMillis {
     }
 }
 
-/// Validated Gregorian natural day serialized as `YYYY-MM-DD`.
+/// 序列化为 `YYYY-MM-DD` 的已校验公历自然日。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, derive_more::From)]
 pub struct NaturalDate(Date);
 
@@ -93,7 +93,7 @@ impl Serialize for NaturalDate {
     }
 }
 
-/// Validated Gregorian natural day encoded on the wire as `YYYYMMDD`.
+/// 在线路协议中编码为 `YYYYMMDD` 的已校验公历自然日。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CompactDate(NaturalDate);
 
@@ -145,7 +145,7 @@ impl Serialize for CompactDate {
     }
 }
 
-/// A natural date represented as its `Asia/Shanghai` midnight Unix milliseconds.
+/// 以 `Asia/Shanghai` 时区午夜 Unix 毫秒值表示的自然日。
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, derive_more::Display,
 )]

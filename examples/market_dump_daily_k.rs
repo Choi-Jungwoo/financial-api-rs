@@ -1,9 +1,11 @@
-#[path = "configuration/client.rs"]
-mod example_client;
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/examples/configuration/client.rs"
+));
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = example_client::from_env()?;
+    let client = from_env()?;
     let response = client.market_dump_daily_k().await?;
 
     println!("request_id={}", response.request_id());

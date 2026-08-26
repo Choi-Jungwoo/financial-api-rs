@@ -2,7 +2,7 @@ use std::fmt;
 
 use crate::ValidationError;
 
-/// A stable name and path for one supported REST capability.
+/// 一个已支持 REST 能力的稳定名称和路径。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct EndpointInfo {
     pub name: &'static str,
@@ -13,7 +13,7 @@ macro_rules! define_endpoints {
     ($($constant:ident => ($name:literal, $path:literal)),+ $(,)?) => {
         $(pub(crate) const $constant: &str = $path;)+
 
-        /// Every currently available REST endpoint in the upstream contract.
+        /// 上游契约中当前所有可用的 REST 端点。
         pub const SUPPORTED_ENDPOINTS: &[EndpointInfo] = &[
             $(EndpointInfo { name: $name, path: $path },)+
         ];

@@ -13,7 +13,14 @@ use crate::{
 use super::validate_date_order;
 
 impl Client {
-    /// Fetch today's anomaly rows, optionally filtered with OR-combined tags.
+    /// 获取当日异动分析记录，可按“或”关系组合标签筛选。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/special_data_anomaly_analysis_list.rs"),
+        "\n```"
+    )]
     pub async fn special_data_anomaly_analysis_list(
         &self,
         tag_codes: &[AnomalyTag],
@@ -26,7 +33,14 @@ impl Client {
         self.get(endpoints::ANOMALY_LIST, &query).await
     }
 
-    /// Fetch today's anomaly rows for up to 50 A-share targets.
+    /// 获取最多 50 个 A 股标的的当日异动分析记录。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/special_data_anomaly_analysis_stock.rs"),
+        "\n```"
+    )]
     pub async fn special_data_anomaly_analysis_stock(
         &self,
         thscodes: &[AShareCode],
@@ -35,7 +49,14 @@ impl Client {
         self.get(endpoints::ANOMALY_STOCK, &query).await
     }
 
-    /// Fetch the dragon-tiger list.
+    /// 获取龙虎榜。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/special_data_dragon_tiger_list.rs"),
+        "\n```"
+    )]
     pub async fn special_data_dragon_tiger_list(
         &self,
         board_type: DragonTigerBoard,
@@ -51,7 +72,14 @@ impl Client {
         self.get(endpoints::DRAGON_TIGER, &query).await
     }
 
-    /// Fetch the current hot-stock list.
+    /// 获取当前个股热榜。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/special_data_hot_stock_list.rs"),
+        "\n```"
+    )]
     pub async fn special_data_hot_stock_list(
         &self,
         period: HotListPeriod,
@@ -60,7 +88,14 @@ impl Client {
             .await
     }
 
-    /// Fetch a historical hot-stock ranking for one natural day.
+    /// 获取指定自然日的历史个股热榜。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/special_data_hot_stock_list_history.rs"),
+        "\n```"
+    )]
     pub async fn special_data_hot_stock_list_history(
         &self,
         date: NaturalDate,
@@ -70,7 +105,14 @@ impl Client {
             .await
     }
 
-    /// Fetch one A-share target's hot-rank trend.
+    /// 获取指定 A 股标的的热榜排名趋势。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/special_data_hot_stock_rank_trend.rs"),
+        "\n```"
+    )]
     pub async fn special_data_hot_stock_rank_trend(
         &self,
         thscode: &AShareCode,
@@ -96,7 +138,14 @@ impl Client {
         self.get(endpoints::HOT_STOCK_TREND, &query).await
     }
 
-    /// Fetch the limit-up pool.
+    /// 获取涨停池。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/special_data_limit_up_pool.rs"),
+        "\n```"
+    )]
     pub async fn special_data_limit_up_pool(
         &self,
         date_ms: Option<ShanghaiDateMillis>,
@@ -114,7 +163,14 @@ impl Client {
         .await
     }
 
-    /// Fetch the limit-down pool.
+    /// 获取跌停池。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/special_data_limit_down_pool.rs"),
+        "\n```"
+    )]
     pub async fn special_data_limit_down_pool(
         &self,
         date_ms: Option<ShanghaiDateMillis>,
@@ -132,7 +188,14 @@ impl Client {
         .await
     }
 
-    /// Fetch the limit-break pool.
+    /// 获取炸板池。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/special_data_limit_break_pool.rs"),
+        "\n```"
+    )]
     pub async fn special_data_limit_break_pool(
         &self,
         date_ms: Option<ShanghaiDateMillis>,
@@ -188,13 +251,27 @@ impl Client {
         Ok(())
     }
 
-    /// Fetch the fixed 30-trading-day limit-up ladder.
+    /// 获取固定覆盖 30 个交易日的连板天梯。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/special_data_limit_up_ladder.rs"),
+        "\n```"
+    )]
     pub async fn special_data_limit_up_ladder(&self) -> Result<Response<LadderData>, Error> {
         self.get(endpoints::LIMIT_UP_LADDER, &[] as &[(&str, &str)])
             .await
     }
 
-    /// Fetch the current skyrocket ranking.
+    /// 获取当前飙升榜。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/special_data_skyrocket_list.rs"),
+        "\n```"
+    )]
     pub async fn special_data_skyrocket_list(
         &self,
         period: HotListPeriod,

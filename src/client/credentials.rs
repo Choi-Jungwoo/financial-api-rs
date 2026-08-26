@@ -6,7 +6,7 @@ use super::ApiKey;
 use crate::ValidationError;
 
 impl ApiKey {
-    /// Validate an API key without exposing it in errors or debug output.
+    /// 校验 API Key，且不在错误或调试输出中暴露其内容。
     pub fn new(value: impl AsRef<str>) -> Result<Self, ValidationError> {
         let value = value.as_ref();
         if value.is_empty() {

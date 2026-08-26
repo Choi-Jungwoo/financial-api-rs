@@ -8,7 +8,14 @@ use crate::{
 const TEN_YEARS_MS: i64 = 315_576_000_000;
 
 impl Client {
-    /// List Tonghuashun indices for a catalog tag.
+    /// 按目录标签列出同花顺指数。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../examples/index_catalog_ths_index_list.rs"),
+        "\n```"
+    )]
     pub async fn index_catalog_ths_index_list(
         &self,
         tag: IndexTag,
@@ -17,7 +24,14 @@ impl Client {
             .await
     }
 
-    /// Fetch the current constituent list of one index.
+    /// 获取指定指数当前的成分股列表。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../examples/index_constituents_ths_stock_list.rs"),
+        "\n```"
+    )]
     pub async fn index_constituents_ths_stock_list(
         &self,
         thscode: &Thscode,
@@ -29,7 +43,14 @@ impl Client {
         .await
     }
 
-    /// Fetch snapshots for one or more exchange or Tonghuashun indices.
+    /// 获取一个或多个交易所指数或同花顺指数的行情快照。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../examples/index_prices_snapshot.rs"),
+        "\n```"
+    )]
     pub async fn index_prices_snapshot(
         &self,
         thscodes: &[Thscode],
@@ -41,7 +62,14 @@ impl Client {
         .await
     }
 
-    /// Fetch historical daily K-lines for one index.
+    /// 获取指定指数的历史日 K 线。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../examples/index_prices_historical.rs"),
+        "\n```"
+    )]
     pub async fn index_prices_historical(
         &self,
         thscode: &Thscode,

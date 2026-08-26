@@ -7,7 +7,14 @@ use crate::{
 use super::{FundTarget, validate_history_range};
 
 impl Client {
-    /// Fetch fund NAV series.
+    /// 获取基金净值序列。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_performance_nav.rs"),
+        "\n```"
+    )]
     pub async fn fund_performance_nav(
         &self,
         fund_type: FundType,
@@ -23,7 +30,14 @@ impl Client {
         self.get(endpoints::FUND_NAV, &query).await
     }
 
-    /// Fetch multi-range fund returns and peer rankings.
+    /// 获取基金多个区间的收益率及同类排名。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_performance_returns.rs"),
+        "\n```"
+    )]
     pub async fn fund_performance_returns(
         &self,
         fund_type: FundType,
@@ -33,7 +47,14 @@ impl Client {
             .await
     }
 
-    /// Fetch historical fund performance indicators.
+    /// 获取基金历史业绩指标。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_performance_indicators_historical.rs"),
+        "\n```"
+    )]
     pub async fn fund_performance_indicators_historical(
         &self,
         fund_type: FundType,
@@ -50,7 +71,14 @@ impl Client {
             .await
     }
 
-    /// Fetch standard-period maximum drawdowns.
+    /// 获取标准区间的最大回撤。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_performance_drawdowns.rs"),
+        "\n```"
+    )]
     pub async fn fund_performance_drawdowns(
         &self,
         fund_type: FundType,

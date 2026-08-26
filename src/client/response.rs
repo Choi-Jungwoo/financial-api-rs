@@ -4,19 +4,19 @@ use super::Response;
 use crate::error::{BusinessError, Error};
 
 impl<T> Response<T> {
-    /// Upstream trace identifier.
+    /// 上游请求追踪标识。
     #[must_use]
     pub fn request_id(&self) -> &str {
         &self.request_id
     }
 
-    /// Endpoint-specific response data.
+    /// 端点特定的响应数据。
     #[must_use]
     pub const fn data(&self) -> &T {
         &self.data
     }
 
-    /// Consume the response and return its endpoint data.
+    /// 消耗响应并返回端点数据。
     #[must_use]
     pub fn into_data(self) -> T {
         self.data
@@ -24,7 +24,7 @@ impl<T> Response<T> {
 }
 
 impl Response<serde_json::Value> {
-    /// Decode lossless JSON data into an application-owned response type.
+    /// 将无损 JSON 数据解码为应用自有的响应类型。
     pub fn into_typed<T: DeserializeOwned>(self) -> Result<Response<T>, Error> {
         let data = serde_json::from_value(self.data).map_err(|source| Error::InvalidResponse {
             source: Some(source),

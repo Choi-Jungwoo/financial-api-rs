@@ -7,7 +7,14 @@ use crate::{
 };
 
 impl Client {
-    /// Fetch a fund manager's investment style.
+    /// 获取基金经理的投资风格。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_managers_investment_style.rs"),
+        "\n```"
+    )]
     pub async fn fund_managers_investment_style(
         &self,
         manager_id: &ManagerId,
@@ -16,7 +23,14 @@ impl Client {
             .await
     }
 
-    /// Fetch a fund manager's performance series.
+    /// 获取基金经理的业绩序列。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_managers_performance.rs"),
+        "\n```"
+    )]
     pub async fn fund_managers_performance(
         &self,
         manager_id: &ManagerId,
@@ -26,7 +40,14 @@ impl Client {
             .await
     }
 
-    /// Fetch a fund manager's professional experience.
+    /// 获取基金经理的从业经历。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_managers_experience.rs"),
+        "\n```"
+    )]
     pub async fn fund_managers_experience(
         &self,
         manager_id: &ManagerId,
@@ -35,7 +56,14 @@ impl Client {
             .await
     }
 
-    /// Fetch a fund manager's detailed profile.
+    /// 获取基金经理的详细资料。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_managers_detail.rs"),
+        "\n```"
+    )]
     pub async fn fund_managers_detail(
         &self,
         manager_id: &ManagerId,

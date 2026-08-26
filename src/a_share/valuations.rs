@@ -3,7 +3,14 @@ use crate::endpoints::join_values;
 use crate::{AShareCode, Client, Error, Response, ValuationsData};
 
 impl Client {
-    /// Fetch latest valuation metrics for up to 100 A-share targets.
+    /// 获取最多 100 个 A 股标的的最新估值指标。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/a_share_valuations_snapshot.rs"),
+        "\n```"
+    )]
     pub async fn a_share_valuations_snapshot(
         &self,
         thscodes: &[AShareCode],

@@ -11,30 +11,30 @@ const DEFAULT_TIMEOUT: Duration = Duration::from_secs(30);
 const API_KEY_HEADER: HeaderName = HeaderName::from_static("x-api-key");
 
 impl ClientBuilder {
-    /// Override the API root, primarily for private deployments and tests.
+    /// 覆盖 API 根地址，主要用于私有部署和测试。
     #[must_use]
     pub fn base_url(mut self, base_url: impl Into<String>) -> Self {
         self.base_url = base_url.into();
         self
     }
 
-    /// Set the complete request timeout.
+    /// 设置完整请求的超时时间。
     #[must_use]
     pub const fn timeout(mut self, timeout: Duration) -> Self {
         self.timeout = timeout;
         self
     }
 
-    /// Override the Shanghai natural date used by relative-date validation.
+    /// 覆盖相对日期校验使用的上海自然日。
     ///
-    /// This is useful for deterministic tests and historical request replay.
+    /// 适用于确定性测试和历史请求重放。
     #[must_use]
     pub const fn reference_date(mut self, date: NaturalDate) -> Self {
         self.reference_date = Some(date);
         self
     }
 
-    /// Validate configuration and construct a reusable client.
+    /// 校验配置并构造可复用客户端。
     pub fn build(self) -> Result<Client, Error> {
         let mut base_url = reqwest::Url::parse(&self.base_url).map_err(|_| {
             ValidationError::new("base_url", "must be a valid absolute hierarchical URL")
@@ -80,7 +80,7 @@ impl ClientBuilder {
 }
 
 impl Client {
-    /// Start client configuration with an explicit API key.
+    /// 使用显式 API Key 开始配置客户端。
     #[must_use]
     pub fn builder(api_key: ApiKey) -> ClientBuilder {
         ClientBuilder {
@@ -91,7 +91,7 @@ impl Client {
         }
     }
 
-    /// Construct a client using `HITHINK_FINANCE_API_KEY`.
+    /// 使用环境变量 `HITHINK_FINANCE_API_KEY` 构造客户端。
     pub fn from_env() -> Result<Self, Error> {
         let value = env::var("HITHINK_FINANCE_API_KEY").map_err(|_| Error::MissingApiKey)?;
         Self::builder(ApiKey::new(value)?).build()

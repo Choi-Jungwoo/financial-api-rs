@@ -7,7 +7,7 @@ use crate::{
 
 use super::{TEN_YEARS_MS, validate_millis_window};
 
-/// Either explicit targets or a page of the complete A-share universe.
+/// 显式指定的标的，或完整 A 股标的宇宙中的一页。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PriceSnapshotSelection {
     Targets(Vec<AShareCode>),
@@ -31,7 +31,14 @@ impl PriceSnapshotSelection {
 }
 
 impl Client {
-    /// Fetch current A-share price snapshots.
+    /// 获取当前 A 股行情快照。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/prices_snapshot.rs"),
+        "\n```"
+    )]
     pub async fn prices_snapshot(
         &self,
         selection: &PriceSnapshotSelection,
@@ -47,7 +54,14 @@ impl Client {
         self.get(endpoints::PRICES_SNAPSHOT, &query).await
     }
 
-    /// Fetch one target's historical daily K-line data.
+    /// 获取指定标的的历史日 K 线数据。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/prices_historical.rs"),
+        "\n```"
+    )]
     pub async fn prices_historical(
         &self,
         thscode: &AShareCode,

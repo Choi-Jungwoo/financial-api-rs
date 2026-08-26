@@ -5,7 +5,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 use super::wire::wire_enum;
 use crate::ValidationError;
 
-/// Non-empty search text used for cross-market target lookup.
+/// 用于跨市场标的检索的非空搜索文本。
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, derive_more::Display)]
 #[serde(transparent)]
 pub struct SearchQuery(String);
@@ -20,7 +20,7 @@ impl SearchQuery {
     }
 }
 
-/// Complete target code including its market suffix.
+/// 包含市场后缀的完整标的代码。
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, derive_more::Display)]
 #[serde(transparent)]
 pub struct Thscode(String);
@@ -75,7 +75,7 @@ impl<'de> Deserialize<'de> for Thscode {
     }
 }
 
-/// Complete target code restricted to the A-share target universe.
+/// 限定在 A 股标的宇宙内的完整标的代码。
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, derive_more::Display)]
 #[serde(transparent)]
 pub struct AShareCode(Thscode);
@@ -127,7 +127,7 @@ impl From<AShareCode> for Thscode {
 }
 
 wire_enum! {
-    /// Exchange filter supported by the metadata API.
+    /// 元数据 API 支持的交易所筛选条件。
     pub enum Exchange {
         Shanghai => "SH",
         Shenzhen => "SZ",
@@ -136,7 +136,7 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// Normalized leaf asset type.
+    /// 规范化的最细粒度资产类型。
     pub enum AssetType {
         AShare => "a-share",
         AShareIndex => "a-share-index",

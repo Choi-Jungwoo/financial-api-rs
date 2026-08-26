@@ -10,18 +10,18 @@ use reqwest::header::HeaderValue;
 
 use crate::NaturalDate;
 
-/// Validated API key stored as a sensitive HTTP header value.
+/// 以敏感 HTTP 请求头值保存的已校验 API Key。
 #[derive(Clone)]
 pub struct ApiKey(HeaderValue);
 
-/// Successful response after the common business envelope has been checked.
+/// 通过通用业务信封校验后的成功响应。
 #[derive(Debug, Clone, PartialEq)]
 pub struct Response<T> {
     request_id: String,
     data: T,
 }
 
-/// Builder for optional client-wide transport configuration.
+/// 用于配置客户端级可选传输参数的构建器。
 #[derive(Debug)]
 pub struct ClientBuilder {
     api_key: ApiKey,
@@ -30,7 +30,7 @@ pub struct ClientBuilder {
     reference_date: Option<NaturalDate>,
 }
 
-/// Reusable async API client.
+/// 可复用的异步 API 客户端。
 #[derive(Debug, Clone)]
 pub struct Client {
     http: reqwest::Client,

@@ -4,7 +4,7 @@ use crate::{AssetType, Exchange, Thscode};
 
 use super::TimestampedItems;
 
-/// One normalized target-code record.
+/// 一条规范化标的代码记录。
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct TickerItem {
     pub thscode: Thscode,

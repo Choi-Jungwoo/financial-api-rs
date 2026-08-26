@@ -3,7 +3,7 @@ use serde::Serialize;
 use crate::endpoints;
 use crate::{AssetType, Client, Error, Exchange, Response, SearchQuery, TickerData};
 
-/// Parameters for target search and cross-market disambiguation.
+/// 用于标的搜索和跨市场消歧的参数。
 #[derive(Debug, Clone, Serialize)]
 pub struct TickerSearchRequest {
     q: SearchQuery,
@@ -50,7 +50,14 @@ impl TickerSearchRequest {
 }
 
 impl Client {
-    /// Search targets by complete code, local ticker, or name.
+    /// 按完整标的代码、纯代码或名称搜索标的。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../examples/tickers_search.rs"),
+        "\n```"
+    )]
     pub async fn tickers_search(
         &self,
         request: &TickerSearchRequest,
@@ -79,7 +86,7 @@ mod tests {
     }
 }
 
-/// Parameters for browsing the target code table.
+/// 用于浏览标的代码表的参数。
 #[derive(Debug, Clone, Serialize)]
 pub struct TickerListRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -135,7 +142,14 @@ impl Default for TickerListRequest {
 }
 
 impl Client {
-    /// Browse the normalized target code table.
+    /// 分页浏览规范化的标的代码表。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../examples/tickers_list.rs"),
+        "\n```"
+    )]
     pub async fn tickers_list(
         &self,
         request: &TickerListRequest,

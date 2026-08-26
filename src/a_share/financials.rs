@@ -9,7 +9,14 @@ use crate::{
 use super::{TEN_YEARS_MS, validate_millis_window};
 
 impl Client {
-    /// Fetch income statements.
+    /// 获取利润表。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/financials_income_statements.rs"),
+        "\n```"
+    )]
     pub async fn financials_income_statements(
         &self,
         thscode: &AShareCode,
@@ -20,7 +27,14 @@ impl Client {
             .await
     }
 
-    /// Fetch balance sheets.
+    /// 获取资产负债表。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/financials_balance_sheets.rs"),
+        "\n```"
+    )]
     pub async fn financials_balance_sheets(
         &self,
         thscode: &AShareCode,
@@ -31,7 +45,14 @@ impl Client {
             .await
     }
 
-    /// Fetch cash-flow statements.
+    /// 获取现金流量表。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/financials_cash_flow_statements.rs"),
+        "\n```"
+    )]
     pub async fn financials_cash_flow_statements(
         &self,
         thscode: &AShareCode,
@@ -64,7 +85,14 @@ impl Client {
         self.get(path, &query).await
     }
 
-    /// Fetch the five groups of financial indicators for one report.
+    /// 获取指定报告期的五类财务指标。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/financials_indicators.rs"),
+        "\n```"
+    )]
     pub async fn financials_indicators(
         &self,
         thscode: &AShareCode,

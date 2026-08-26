@@ -6,12 +6,12 @@ use time::OffsetDateTime;
 use crate::endpoints;
 use crate::{Client, Error, Response, ValidationError};
 
-/// Short-lived presigned URL whose debug representation is always redacted.
+/// 调试表示始终脱敏的短期预签名 URL。
 #[derive(Clone, PartialEq, Eq)]
 pub struct SecretUrl(String);
 
 impl SecretUrl {
-    /// Validate an absolute HTTP(S) download URL.
+    /// 校验绝对 HTTP(S) 下载 URL。
     pub fn new(value: impl Into<String>) -> Result<Self, ValidationError> {
         let value = value.into();
         let url = reqwest::Url::parse(&value)
@@ -29,7 +29,7 @@ impl SecretUrl {
         Ok(Self(value))
     }
 
-    /// Borrow the URL for immediate download.
+    /// 借用 URL 以立即下载。
     #[must_use]
     pub fn expose(&self) -> &str {
         &self.0
@@ -49,7 +49,7 @@ impl fmt::Debug for SecretUrl {
     }
 }
 
-/// Short-lived market dump download authorization.
+/// 短期有效的市场数据包下载授权。
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct MarketDumpUrl {
     pub presigned_url: SecretUrl,
@@ -58,17 +58,38 @@ pub struct MarketDumpUrl {
 }
 
 impl Client {
-    /// Sign a URL for the full ten-year daily K-line dump.
+    /// 获取完整十年日 K 线数据包的预签名下载地址。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../examples/market_dump_daily_k.rs"),
+        "\n```"
+    )]
     pub async fn market_dump_daily_k(&self) -> Result<Response<MarketDumpUrl>, Error> {
         self.market_dump_url(endpoints::DUMP_DAILY_K).await
     }
 
-    /// Sign a URL for the latest ten trading days of daily K-lines.
+    /// 获取最近十个交易日日 K 线数据包的预签名下载地址。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../examples/market_dump_daily_k_10d.rs"),
+        "\n```"
+    )]
     pub async fn market_dump_daily_k_10d(&self) -> Result<Response<MarketDumpUrl>, Error> {
         self.market_dump_url(endpoints::DUMP_DAILY_K_10D).await
     }
 
-    /// Sign a URL for the full corporate-action event dump.
+    /// 获取完整复权事件数据包的预签名下载地址。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../examples/market_dump_adjustment_factors.rs"),
+        "\n```"
+    )]
     pub async fn market_dump_adjustment_factors(&self) -> Result<Response<MarketDumpUrl>, Error> {
         self.market_dump_url(endpoints::DUMP_ADJUSTMENT_FACTORS)
             .await

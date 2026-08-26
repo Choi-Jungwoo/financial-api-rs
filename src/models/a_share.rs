@@ -8,7 +8,7 @@ use crate::{
 
 use super::TimestampedItems;
 
-/// Corporate-action events for one A-share target.
+/// 指定 A 股标的的复权事件。
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct AdjustmentFactorsData {
     pub thscode: AShareCode,
@@ -24,7 +24,7 @@ pub struct AdjustmentFactorItem {
     pub per_share_bonus: f64,
 }
 
-/// Fields shared by the three listed-company financial statements.
+/// 上市公司三类财务报表共用的字段。
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct FinancialStatementMeta {
     pub thscode: AShareCode,

@@ -2,7 +2,14 @@ use crate::endpoints;
 use crate::{Client, Error, FundDividendsData, FundType, Response, Thscode};
 
 impl Client {
-    /// Fetch historical fund dividends.
+    /// 获取基金历史分红记录。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_corporate_actions_dividends.rs"),
+        "\n```"
+    )]
     pub async fn fund_corporate_actions_dividends(
         &self,
         fund_type: FundType,

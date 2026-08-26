@@ -1,11 +1,13 @@
-#[path = "configuration/client.rs"]
-mod example_client;
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/examples/configuration/client.rs"
+));
 
 use financial_api::{LimitDownSortField, Page, SortDirection};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = example_client::from_env()?;
+    let client = from_env()?;
     let response = client
         .special_data_limit_down_pool(
             None,

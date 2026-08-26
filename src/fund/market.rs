@@ -7,7 +7,14 @@ use crate::{
 use super::validate_history_range;
 
 impl Client {
-    /// Fetch the latest exchange-traded fund snapshot.
+    /// 获取场内基金的最新行情快照。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_market_snapshot.rs"),
+        "\n```"
+    )]
     pub async fn fund_market_snapshot(
         &self,
         thscode: &Thscode,
@@ -20,7 +27,14 @@ impl Client {
         .await
     }
 
-    /// Fetch exchange-traded fund historical daily prices.
+    /// 获取场内基金的历史日 K 线。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_market_historical.rs"),
+        "\n```"
+    )]
     pub async fn fund_market_historical(
         &self,
         thscode: &Thscode,

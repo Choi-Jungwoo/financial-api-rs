@@ -6,7 +6,7 @@ use super::market_time::UnixMillis;
 use super::wire::wire_enum;
 use crate::ValidationError;
 
-/// Mutually exclusive recent-period or timestamp-range financial query.
+/// “最近报告期”和“时间戳区间”互斥的财务查询。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FinancialRange {
     Recent { limit: u8 },
@@ -32,7 +32,7 @@ impl FinancialRange {
     }
 }
 
-/// Financial report identifier in `YYYY-[1-4]` form.
+/// `YYYY-[1-4]` 格式的财务报告期标识。
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, derive_more::Display)]
 #[serde(transparent)]
 pub struct FinancialReport(String);
@@ -73,7 +73,7 @@ impl<'de> Deserialize<'de> for FinancialReport {
 }
 
 wire_enum! {
-    /// Financial statement report frequency.
+    /// 财务报表频率。
     pub enum FinancialPeriod {
         Annual => "annual",
         Quarterly => "quarterly",
@@ -81,7 +81,7 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// Fiscal period returned by listed-company financial statements.
+    /// 上市公司财务报表返回的会计期间。
     pub enum FiscalPeriod {
         FullYear => "FY",
         FirstQuarter => "Q1",
@@ -92,7 +92,7 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// Fixed financial-analysis ability group.
+    /// 固定的财务分析能力分组。
     pub enum FinancialAbilityKind {
         Growth => "growth",
         Profitability => "profitability",
@@ -103,7 +103,7 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// Financial indicator identifier defined by the upstream contract.
+    /// 上游契约定义的财务指标标识。
     pub enum FinancialIndicatorId {
         TotalAssetsGrowthRatio => "total_assets_growth_ratio",
         NetProfitYoyGrowthRatio => "net_profit_yoy_growth_ratio",

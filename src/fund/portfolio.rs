@@ -8,7 +8,14 @@ use crate::{
 use super::FundTarget;
 
 impl Client {
-    /// Fetch periodically disclosed fund holdings and summary ratios.
+    /// 获取定期披露的基金持仓及汇总比例。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_portfolio_holdings.rs"),
+        "\n```"
+    )]
     pub async fn fund_portfolio_holdings(
         &self,
         fund_type: FundType,
@@ -18,7 +25,14 @@ impl Client {
             .await
     }
 
-    /// Fetch historical disclosed stock holdings.
+    /// 获取历史披露的股票持仓。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_portfolio_stock_history.rs"),
+        "\n```"
+    )]
     pub async fn fund_portfolio_stock_history(
         &self,
         fund_type: FundType,
@@ -36,7 +50,14 @@ impl Client {
         .await
     }
 
-    /// Fetch historical disclosed bond holdings.
+    /// 获取历史披露的债券持仓。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_portfolio_bond_history.rs"),
+        "\n```"
+    )]
     pub async fn fund_portfolio_bond_history(
         &self,
         fund_type: FundType,
@@ -68,7 +89,14 @@ impl Client {
         self.get(path, &query).await
     }
 
-    /// Fetch available stock-holding report dates.
+    /// 获取可用的股票持仓报告期。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_portfolio_stock_report_dates.rs"),
+        "\n```"
+    )]
     pub async fn fund_portfolio_stock_report_dates(
         &self,
         fund_type: FundType,
@@ -84,7 +112,14 @@ impl Client {
         .await
     }
 
-    /// Fetch available bond-holding report dates.
+    /// 获取可用的债券持仓报告期。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_portfolio_bond_report_dates.rs"),
+        "\n```"
+    )]
     pub async fn fund_portfolio_bond_report_dates(
         &self,
         fund_type: FundType,
@@ -114,7 +149,14 @@ impl Client {
         self.get(path, &query).await
     }
 
-    /// Fetch fund asset allocation.
+    /// 获取基金资产配置。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_portfolio_asset_allocation.rs"),
+        "\n```"
+    )]
     pub async fn fund_portfolio_asset_allocation(
         &self,
         fund_type: FundType,
@@ -124,7 +166,14 @@ impl Client {
             .await
     }
 
-    /// Fetch fund industry allocation.
+    /// 获取基金行业配置。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_portfolio_industry_allocation.rs"),
+        "\n```"
+    )]
     pub async fn fund_portfolio_industry_allocation(
         &self,
         fund_type: FundType,

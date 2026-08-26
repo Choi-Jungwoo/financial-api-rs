@@ -7,7 +7,14 @@ use crate::{
 use super::FundTarget;
 
 impl Client {
-    /// Fetch fund holder structure.
+    /// 获取基金持有人结构。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_holders_detail.rs"),
+        "\n```"
+    )]
     pub async fn fund_holders_detail(
         &self,
         fund_type: FundType,
@@ -19,7 +26,14 @@ impl Client {
         self.get(endpoints::FUND_HOLDERS_DETAIL, &query).await
     }
 
-    /// Fetch up to ten largest fund holders.
+    /// 获取最多十名主要基金持有人。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/fund_holders_top.rs"),
+        "\n```"
+    )]
     pub async fn fund_holders_top(
         &self,
         fund_type: FundType,

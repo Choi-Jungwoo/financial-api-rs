@@ -2,7 +2,7 @@ use serde::Deserialize;
 
 use crate::{Thscode, UnixMillis};
 
-/// A-share or index price snapshot payload.
+/// A 股或指数的行情快照载荷。
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct PriceSnapshotData {
     pub timestamp: Option<UnixMillis>,
@@ -10,7 +10,7 @@ pub struct PriceSnapshotData {
     pub item: Vec<PriceSnapshotItem>,
 }
 
-/// One latest-price record.
+/// 一条最新行情记录。
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct PriceSnapshotItem {
     pub thscode: Thscode,
@@ -26,14 +26,14 @@ pub struct PriceSnapshotItem {
     pub turnover: f64,
 }
 
-/// Historical daily price payload.
+/// 历史日 K 线载荷。
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct HistoricalData {
     pub timestamp: UnixMillis,
     pub item: Vec<PriceBarItem>,
 }
 
-/// One daily OHLCV bar.
+/// 一条日开高低收量 K 线。
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct PriceBarItem {
     pub date_ms: UnixMillis,

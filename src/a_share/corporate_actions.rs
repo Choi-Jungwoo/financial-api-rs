@@ -4,7 +4,14 @@ use crate::{AShareCode, AdjustmentFactorsData, Client, Error, NaturalDate, Respo
 use super::validate_date_order;
 
 impl Client {
-    /// Fetch raw corporate action events used for price adjustment.
+    /// 获取原始复权事件。
+    ///
+    /// # 示例
+    #[doc = concat!(
+        "```no_run\n",
+        include_str!("../../examples/corp_actions_adjustment_factors.rs"),
+        "\n```"
+    )]
     pub async fn corp_actions_adjustment_factors(
         &self,
         thscode: &AShareCode,

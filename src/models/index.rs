@@ -4,7 +4,7 @@ use crate::{AShareCode, Adjustment, Thscode, UnixMillis};
 
 use super::{PriceBarItem, TimestampedItems};
 
-/// Index historical prices include a fixed `null` adjustment field.
+/// 指数历史行情包含固定为 `null` 的复权字段。
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct IndexHistoricalData {
     pub timestamp: UnixMillis,
