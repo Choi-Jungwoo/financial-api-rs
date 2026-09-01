@@ -59,7 +59,37 @@ impl FromStr for Thscode {
     type Err = ValidationError;
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::try_from(value)
+    }
+}
+
+impl TryFrom<&str> for Thscode {
+    type Error = ValidationError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
         Self::new(value)
+    }
+}
+
+impl TryFrom<String> for Thscode {
+    type Error = ValidationError;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        Self::new(value)
+    }
+}
+
+impl TryFrom<&String> for Thscode {
+    type Error = ValidationError;
+
+    fn try_from(value: &String) -> Result<Self, Self::Error> {
+        Self::new(value)
+    }
+}
+
+impl From<&Thscode> for Thscode {
+    fn from(value: &Thscode) -> Self {
+        value.clone()
     }
 }
 
@@ -84,17 +114,7 @@ pub struct AShareCode(Thscode);
 impl AShareCode {
     pub fn new(value: impl AsRef<str>) -> Result<Self, ValidationError> {
         let code = Thscode::new(value)?;
-        let (ticker, suffix) = code.ticker_and_suffix();
-        if ticker.len() != 6
-            || !ticker.bytes().all(|byte| byte.is_ascii_digit())
-            || !matches!(suffix, "SH" | "SZ" | "BJ")
-        {
-            return Err(ValidationError::new(
-                "thscode",
-                "must be a six-digit A-share code ending in SH, SZ, or BJ",
-            ));
-        }
-        Ok(Self(code))
+        Self::try_from(code)
     }
 
     #[must_use]
@@ -107,11 +127,67 @@ impl AShareCode {
     }
 }
 
+impl TryFrom<Thscode> for AShareCode {
+    type Error = ValidationError;
+
+    fn try_from(code: Thscode) -> Result<Self, Self::Error> {
+        let (ticker, suffix) = code.ticker_and_suffix();
+        if ticker.len() != 6
+            || !ticker.bytes().all(|byte| byte.is_ascii_digit())
+            || !matches!(suffix, "SH" | "SZ" | "BJ")
+        {
+            return Err(ValidationError::new(
+                "thscode",
+                "must be a six-digit A-share code ending in SH, SZ, or BJ",
+            ));
+        }
+        Ok(Self(code))
+    }
+}
+
 impl FromStr for AShareCode {
     type Err = ValidationError;
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::try_from(value)
+    }
+}
+
+impl TryFrom<&str> for AShareCode {
+    type Error = ValidationError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
         Self::new(value)
+    }
+}
+
+impl TryFrom<String> for AShareCode {
+    type Error = ValidationError;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        Self::new(value)
+    }
+}
+
+impl TryFrom<&String> for AShareCode {
+    type Error = ValidationError;
+
+    fn try_from(value: &String) -> Result<Self, Self::Error> {
+        Self::new(value)
+    }
+}
+
+impl From<&AShareCode> for AShareCode {
+    fn from(value: &AShareCode) -> Self {
+        value.clone()
+    }
+}
+
+impl TryFrom<&Thscode> for AShareCode {
+    type Error = ValidationError;
+
+    fn try_from(value: &Thscode) -> Result<Self, Self::Error> {
+        Self::try_from(value.clone())
     }
 }
 
@@ -131,6 +207,12 @@ impl<'de> Deserialize<'de> for AShareCode {
 impl From<AShareCode> for Thscode {
     fn from(value: AShareCode) -> Self {
         value.0
+    }
+}
+
+impl From<&AShareCode> for Thscode {
+    fn from(value: &AShareCode) -> Self {
+        value.0.clone()
     }
 }
 
@@ -176,10 +258,11 @@ mod tests {
 
     #[test]
     fn target_values_use_standard_fallible_conversions() {
-        let target: Thscode = "600519.sh".parse().unwrap();
-        let a_share: AShareCode = "600519.sh".parse().unwrap();
+        let text = "600519.sh".to_owned();
+        let a_share = AShareCode::try_from(&text).unwrap();
+        let target = Thscode::try_from(text).unwrap();
 
-        assert_eq!(target, a_share.into());
-        assert!("510300.OF".parse::<AShareCode>().is_err());
+        assert_eq!(target, Thscode::from(a_share));
+        assert!(AShareCode::try_from("510300.OF").is_err());
     }
 }

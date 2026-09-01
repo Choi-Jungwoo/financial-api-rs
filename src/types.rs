@@ -3,6 +3,7 @@ mod decimal;
 mod finance;
 mod fund;
 mod index;
+mod input;
 mod market_data;
 mod market_time;
 mod target;
@@ -22,6 +23,7 @@ pub use fund::{
     ReportType,
 };
 pub use index::IndexTag;
+pub use input::OptionalInput;
 pub use market_data::{Adjustment, DailyInterval};
 pub(crate) use market_time::TEN_YEARS_MS;
 pub use market_time::{CompactDate, NaturalDate, ShanghaiDateMillis, UnixMillis};

@@ -3,10 +3,11 @@ use serde::de::DeserializeOwned;
 use crate::endpoints;
 use crate::endpoints::{join_a_share_codes, join_values};
 use crate::{
-    AnomalyData, AnomalyTag, Client, DragonTigerBoard, DragonTigerData, Error, HotListPeriod,
-    HotStockData, HotStockHistoryData, HotStockTrendData, LadderData, LimitBreakData,
-    LimitBreakSortField, LimitDownData, LimitDownSortField, LimitUpData, LimitUpSortField,
-    NaturalDate, Page, Response, ShanghaiDateMillis, SortDirection, ValidationError,
+    AShareCode, AnomalyData, AnomalyTag, Client, DragonTigerBoard, DragonTigerData, Error,
+    HotListPeriod, HotStockData, HotStockHistoryData, HotStockTrendData, LadderData,
+    LimitBreakData, LimitBreakSortField, LimitDownData, LimitDownSortField, LimitUpData,
+    LimitUpSortField, NaturalDate, OptionalInput, Page, Response, ShanghaiDateMillis,
+    SortDirection, ValidationError,
 };
 
 use super::validate_date_order;
@@ -42,7 +43,8 @@ impl Client {
     )]
     pub async fn special_data_anomaly_analysis_stock(
         &self,
-        thscodes: &[impl AsRef<str> + Sync],
+        thscodes: impl IntoIterator<Item = impl TryInto<AShareCode, Error: Into<ValidationError>>>
+        + Send,
     ) -> Result<Response<AnomalyData>, Error> {
         let query = [("thscodes", join_a_share_codes(thscodes, Some(50))?)];
         self.get(endpoints::ANOMALY_STOCK, &query).await
@@ -59,9 +61,10 @@ impl Client {
     pub async fn special_data_dragon_tiger_list(
         &self,
         board_type: DragonTigerBoard,
-        date: Option<&str>,
+        date: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>> + Send,
     ) -> Result<Response<DragonTigerData>, Error> {
-        let date = date.map(NaturalDate::parse).transpose()?;
+        let date: OptionalInput<NaturalDate> = date.try_into().map_err(Into::into)?;
+        let date = date.into_inner();
         if let Some(date) = date {
             self.validate_recent_date(date, "date")?;
         }
@@ -98,9 +101,9 @@ impl Client {
     )]
     pub async fn special_data_hot_stock_list_history(
         &self,
-        date: &str,
+        date: impl TryInto<NaturalDate, Error: Into<ValidationError>> + Send,
     ) -> Result<Response<HotStockHistoryData>, Error> {
-        let date = NaturalDate::parse(date)?;
+        let date: NaturalDate = date.try_into().map_err(Into::into)?;
         self.validate_recent_date(date, "date")?;
         self.get(endpoints::HOT_STOCK_HISTORY, &[("date", date.to_string())])
             .await
@@ -116,13 +119,13 @@ impl Client {
     )]
     pub async fn special_data_hot_stock_rank_trend(
         &self,
-        thscode: impl AsRef<str> + Send,
-        start_date: &str,
-        end_date: &str,
+        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>> + Send,
+        start_date: impl TryInto<NaturalDate, Error: Into<ValidationError>> + Send,
+        end_date: impl TryInto<NaturalDate, Error: Into<ValidationError>> + Send,
     ) -> Result<Response<HotStockTrendData>, Error> {
-        let thscode = crate::AShareCode::new(thscode)?;
-        let start_date = NaturalDate::parse(start_date)?;
-        let end_date = NaturalDate::parse(end_date)?;
+        let thscode: AShareCode = thscode.try_into().map_err(Into::into)?;
+        let start_date: NaturalDate = start_date.try_into().map_err(Into::into)?;
+        let end_date: NaturalDate = end_date.try_into().map_err(Into::into)?;
         validate_date_order(start_date, end_date, "end_date")?;
         self.validate_recent_date(start_date, "start_date")?;
         self.validate_recent_date(end_date, "end_date")?;
@@ -152,7 +155,7 @@ impl Client {
     )]
     pub async fn special_data_limit_up_pool(
         &self,
-        date: Option<&str>,
+        date: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>> + Send,
         page: Page,
         sort_field: LimitUpSortField,
         sort_dir: SortDirection,
@@ -171,7 +174,7 @@ impl Client {
     )]
     pub async fn special_data_limit_down_pool(
         &self,
-        date: Option<&str>,
+        date: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>> + Send,
         page: Page,
         sort_field: LimitDownSortField,
         sort_dir: SortDirection,
@@ -190,7 +193,7 @@ impl Client {
     )]
     pub async fn special_data_limit_break_pool(
         &self,
-        date: Option<&str>,
+        date: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>> + Send,
         page: Page,
         sort_field: LimitBreakSortField,
         sort_dir: SortDirection,
@@ -208,19 +211,20 @@ impl Client {
     async fn special_data_pool<T: DeserializeOwned>(
         &self,
         path: &str,
-        date: Option<&str>,
+        date: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>> + Send,
         page: Page,
         sort_field: impl std::fmt::Display,
         sort_dir: SortDirection,
     ) -> Result<Response<T>, Error> {
+        let date: OptionalInput<NaturalDate> = date.try_into().map_err(Into::into)?;
         let mut query = vec![
             ("page", page.number().to_string()),
             ("size", page.size().to_string()),
             ("sort_field", sort_field.to_string()),
             ("sort_dir", sort_dir.to_string()),
         ];
-        if let Some(date) = date {
-            let date_ms = ShanghaiDateMillis::from_date(NaturalDate::parse(date)?)?;
+        if let Some(date) = date.into_inner() {
+            let date_ms = ShanghaiDateMillis::from_date(date)?;
             query.push(("date_ms", date_ms.to_string()));
         }
         self.get(path, &query).await
@@ -314,7 +318,10 @@ mod tests {
                 .await
                 .unwrap_err(),
             client
-                .special_data_dragon_tiger_list(DragonTigerBoard::All, Some("2026-08-26"))
+                .special_data_dragon_tiger_list(
+                    DragonTigerBoard::All,
+                    Some(NaturalDate::parse("2026-08-26").unwrap()),
+                )
                 .await
                 .unwrap_err(),
         ] {

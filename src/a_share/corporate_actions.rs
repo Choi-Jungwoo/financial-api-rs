@@ -1,5 +1,8 @@
 use crate::endpoints;
-use crate::{AShareCode, AdjustmentFactorsData, Client, Error, NaturalDate, Response};
+use crate::{
+    AShareCode, AdjustmentFactorsData, Client, Error, NaturalDate, OptionalInput, Response,
+    ValidationError,
+};
 
 use super::validate_date_order;
 
@@ -14,13 +17,15 @@ impl Client {
     )]
     pub async fn corp_actions_adjustment_factors(
         &self,
-        thscode: impl AsRef<str> + Send,
-        from: Option<&str>,
-        to: Option<&str>,
+        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>> + Send,
+        from: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>> + Send,
+        to: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>> + Send,
     ) -> Result<Response<AdjustmentFactorsData>, Error> {
-        let thscode = AShareCode::new(thscode)?;
-        let from = from.map(NaturalDate::parse).transpose()?;
-        let to = to.map(NaturalDate::parse).transpose()?;
+        let thscode: AShareCode = thscode.try_into().map_err(Into::into)?;
+        let from: OptionalInput<NaturalDate> = from.try_into().map_err(Into::into)?;
+        let to: OptionalInput<NaturalDate> = to.try_into().map_err(Into::into)?;
+        let from = from.into_inner();
+        let to = to.into_inner();
         let mut query = vec![("thscode", thscode.into_string())];
         if let (Some(from), Some(to)) = (from, to) {
             validate_date_order(from, to, "to")?;
@@ -47,9 +52,11 @@ mod tests {
             .build()
             .unwrap();
         let stock = AShareCode::new("600519.SH").unwrap();
+        let from = NaturalDate::parse("2026-08-25").unwrap();
+        let to = NaturalDate::parse("2026-08-24").unwrap();
 
         let error = client
-            .corp_actions_adjustment_factors(&stock, Some("2026-08-25"), Some("2026-08-24"))
+            .corp_actions_adjustment_factors(&stock, Some(from), Some(to))
             .await
             .unwrap_err();
 

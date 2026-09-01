@@ -99,32 +99,36 @@ pub(crate) fn join_values<T: fmt::Display>(
 }
 
 pub(crate) fn join_a_share_codes(
-    values: &[impl AsRef<str>],
+    values: impl IntoIterator<Item = impl TryInto<AShareCode, Error: Into<ValidationError>>>,
     maximum: Option<usize>,
 ) -> Result<String, ValidationError> {
-    validate_value_count("thscodes", values.len(), maximum)?;
-    let mut joined = String::new();
-    for value in values {
-        if !joined.is_empty() {
-            joined.push(',');
-        }
-        joined.push_str(AShareCode::new(value)?.as_str());
-    }
-    Ok(joined)
+    join_converted_values::<AShareCode>("thscodes", values, maximum)
 }
 
 pub(crate) fn join_thscodes(
-    values: &[impl AsRef<str>],
+    values: impl IntoIterator<Item = impl TryInto<Thscode, Error: Into<ValidationError>>>,
     maximum: Option<usize>,
 ) -> Result<String, ValidationError> {
-    validate_value_count("thscodes", values.len(), maximum)?;
+    join_converted_values::<Thscode>("thscodes", values, maximum)
+}
+
+fn join_converted_values<T: fmt::Display>(
+    field: &'static str,
+    values: impl IntoIterator<Item = impl TryInto<T, Error: Into<ValidationError>>>,
+    maximum: Option<usize>,
+) -> Result<String, ValidationError> {
     let mut joined = String::new();
+    let mut length = 0;
     for value in values {
+        length += 1;
+        validate_value_count(field, length, maximum)?;
         if !joined.is_empty() {
             joined.push(',');
         }
-        joined.push_str(Thscode::new(value)?.as_str());
+        let value: T = value.try_into().map_err(Into::into)?;
+        write!(&mut joined, "{value}").expect("writing to a String cannot fail");
     }
+    validate_value_count(field, length, None)?;
     Ok(joined)
 }
 

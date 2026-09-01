@@ -33,9 +33,9 @@ impl Client {
     )]
     pub async fn index_constituents_ths_stock_list(
         &self,
-        thscode: impl AsRef<str> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
     ) -> Result<Response<IndexConstituentsData>, Error> {
-        let thscode = Thscode::new(thscode)?;
+        let thscode: Thscode = thscode.try_into().map_err(Into::into)?;
         self.get(
             endpoints::INDEX_CONSTITUENTS,
             &[("thscode", thscode.as_str())],
@@ -53,7 +53,7 @@ impl Client {
     )]
     pub async fn index_prices_snapshot(
         &self,
-        thscodes: &[impl AsRef<str> + Sync],
+        thscodes: impl IntoIterator<Item = impl TryInto<Thscode, Error: Into<ValidationError>>> + Send,
     ) -> Result<Response<PriceSnapshotData>, Error> {
         self.get(
             endpoints::INDEX_SNAPSHOT,
@@ -72,13 +72,13 @@ impl Client {
     )]
     pub async fn index_prices_historical(
         &self,
-        thscode: impl AsRef<str> + Send,
-        start: i64,
-        end: i64,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
+        start: impl TryInto<UnixMillis, Error: Into<ValidationError>> + Send,
+        end: impl TryInto<UnixMillis, Error: Into<ValidationError>> + Send,
     ) -> Result<Response<IndexHistoricalData>, Error> {
-        let thscode = Thscode::new(thscode)?;
-        let start = UnixMillis::new(start)?;
-        let end = UnixMillis::new(end)?;
+        let thscode: Thscode = thscode.try_into().map_err(Into::into)?;
+        let start: UnixMillis = start.try_into().map_err(Into::into)?;
+        let end: UnixMillis = end.try_into().map_err(Into::into)?;
         validate_history_window(start, end)?;
         let query = [
             ("thscode", thscode.into_string()),

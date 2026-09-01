@@ -1,7 +1,7 @@
 use crate::endpoints;
 use crate::{
     Client, Error, FundHoldersData, FundTopHoldersData, FundType, HolderMergeScope, Response,
-    ValidationError,
+    Thscode, ValidationError,
 };
 
 use super::fund_target_query;
@@ -18,7 +18,7 @@ impl Client {
     pub async fn fund_holders_detail(
         &self,
         fund_type: FundType,
-        thscode: impl AsRef<str> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
         merge_scope: HolderMergeScope,
     ) -> Result<Response<FundHoldersData>, Error> {
         let mut query = fund_target_query(fund_type, thscode)?;
@@ -37,7 +37,7 @@ impl Client {
     pub async fn fund_holders_top(
         &self,
         fund_type: FundType,
-        thscode: impl AsRef<str> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
         limit: Option<u8>,
     ) -> Result<Response<FundTopHoldersData>, Error> {
         let mut query = fund_target_query(fund_type, thscode)?;

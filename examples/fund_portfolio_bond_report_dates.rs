@@ -4,7 +4,7 @@ use financial_api::{Client, Error, FundType};
 async fn main() -> Result<(), Error> {
     let client = Client::from_env()?;
     let response = client
-        .fund_portfolio_bond_report_dates(FundType::Otc, "025480.OF", Some("quarter"))
+        .fund_portfolio_bond_report_dates(FundType::Otc, "025480.OF", "quarter")
         .await?;
 
     println!("request_id={}", response.request_id());

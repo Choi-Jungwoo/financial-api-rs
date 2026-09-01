@@ -1,5 +1,5 @@
 use crate::endpoints;
-use crate::{Client, Cursor, Error, FundNewsData, FundType, Response, ValidationError};
+use crate::{Client, Cursor, Error, FundNewsData, FundType, Response, Thscode, ValidationError};
 
 use super::fund_target_query;
 
@@ -15,9 +15,9 @@ impl Client {
     pub async fn fund_news_article_list(
         &self,
         fund_type: FundType,
-        thscode: impl AsRef<str> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
         limit: Option<u32>,
-        offset: Option<&str>,
+        offset: Option<&Cursor>,
     ) -> Result<Response<FundNewsData>, Error> {
         let mut query = fund_target_query(fund_type, thscode)?;
         if limit == Some(0) {
@@ -27,7 +27,7 @@ impl Client {
             query.push(("limit", limit.to_string()));
         }
         if let Some(offset) = offset {
-            query.push(("offset", Cursor::new(offset)?.into_string()));
+            query.push(("offset", offset.to_string()));
         }
         self.get(endpoints::FUND_NEWS, &query).await
     }

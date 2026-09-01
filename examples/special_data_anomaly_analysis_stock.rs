@@ -4,7 +4,7 @@ use financial_api::{Client, Error};
 async fn main() -> Result<(), Error> {
     let client = Client::from_env()?;
     let response = client
-        .special_data_anomaly_analysis_stock(&["600519.SH"])
+        .special_data_anomaly_analysis_stock(["600519.SH"])
         .await?;
 
     println!("request_id={}", response.request_id());

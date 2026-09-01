@@ -1,6 +1,7 @@
 use financial_api::{
-    Adjustment, ApiKey, Client, Error, FundType, IndexTag, JsonValue, LimitBreakSortField,
-    MarketDumpUrl, NaturalDate, Page, SortDirection, TickerListRequest, TickerSearchRequest,
+    AShareCode, Adjustment, ApiKey, Client, Cursor, Error, FundType, IndexTag, JsonValue,
+    LimitBreakSortField, MarketDumpUrl, NaturalDate, Page, SortDirection, TickerListRequest,
+    TickerSearchRequest, UnixMillis,
 };
 use serde_json::json;
 use wiremock::matchers::{method, path, query_param};
@@ -21,6 +22,35 @@ fn client(server: &MockServer) -> Client {
         .reference_date(NaturalDate::parse("2026-08-25").unwrap())
         .build()
         .unwrap()
+}
+
+#[tokio::test]
+async fn historical_prices_accepts_validated_domain_inputs() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/api/a-share/prices/historical"))
+        .and(query_param("thscode", "600519.SH"))
+        .and(query_param("start", "1716105600000"))
+        .and(query_param("end", "1716192000000"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "code": 2003,
+            "message": "capability denied",
+            "request_id": "typed-input",
+            "data": null
+        })))
+        .mount(&server)
+        .await;
+
+    let target = AShareCode::try_from("600519.SH").unwrap();
+    let start = UnixMillis::try_from(1_716_105_600_000).unwrap();
+    let end = UnixMillis::try_from(1_716_192_000_000).unwrap();
+
+    let error = client(&server)
+        .prices_historical(&target, start, end, Adjustment::None, 0)
+        .await
+        .unwrap_err();
+
+    assert!(matches!(error, Error::Business(_)));
 }
 
 #[tokio::test]
@@ -72,6 +102,8 @@ async fn representative_endpoint_families_preserve_their_wire_contracts() {
         .await;
 
     let client = client(&server);
+    let cursor = Cursor::try_from("opaque+/cursor==").unwrap();
+    let date = NaturalDate::try_from("2024-05-20").unwrap();
     let list = TickerListRequest::new()
         .asset_types([
             financial_api::AssetType::AShare,
@@ -85,17 +117,12 @@ async fn representative_endpoint_families_preserve_their_wire_contracts() {
         .await
         .unwrap();
     client
-        .fund_news_article_list(
-            FundType::Exchange,
-            " 510300.sh ",
-            Some(20),
-            Some("opaque+/cursor=="),
-        )
+        .fund_news_article_list(FundType::Exchange, " 510300.sh ", Some(20), Some(&cursor))
         .await
         .unwrap();
     client
         .special_data_limit_break_pool(
-            Some("2024-05-20"),
+            Some(date),
             Page::new(2, 80).unwrap(),
             LimitBreakSortField::OpenTimes,
             SortDirection::Ascending,

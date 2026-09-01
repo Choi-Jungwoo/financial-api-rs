@@ -1,6 +1,6 @@
 use crate::endpoints;
 use crate::endpoints::join_a_share_codes;
-use crate::{Client, Error, Response, ValuationsData};
+use crate::{AShareCode, Client, Error, Response, ValidationError, ValuationsData};
 
 impl Client {
     /// 获取最多 100 个 A 股标的的最新估值指标。
@@ -13,7 +13,8 @@ impl Client {
     )]
     pub async fn a_share_valuations_snapshot(
         &self,
-        thscodes: &[impl AsRef<str> + Sync],
+        thscodes: impl IntoIterator<Item = impl TryInto<AShareCode, Error: Into<ValidationError>>>
+        + Send,
     ) -> Result<Response<ValuationsData>, Error> {
         let query = [("thscodes", join_a_share_codes(thscodes, Some(100))?)];
         self.get(endpoints::VALUATIONS_SNAPSHOT, &query).await

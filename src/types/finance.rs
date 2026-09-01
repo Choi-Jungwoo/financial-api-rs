@@ -34,7 +34,37 @@ impl FromStr for FinancialReport {
     type Err = ValidationError;
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::try_from(value)
+    }
+}
+
+impl TryFrom<&str> for FinancialReport {
+    type Error = ValidationError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
         Self::parse(value)
+    }
+}
+
+impl TryFrom<String> for FinancialReport {
+    type Error = ValidationError;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        Self::parse(value)
+    }
+}
+
+impl TryFrom<&String> for FinancialReport {
+    type Error = ValidationError;
+
+    fn try_from(value: &String) -> Result<Self, Self::Error> {
+        Self::parse(value)
+    }
+}
+
+impl From<&FinancialReport> for FinancialReport {
+    fn from(value: &FinancialReport) -> Self {
+        value.clone()
     }
 }
 
@@ -122,9 +152,9 @@ mod tests {
 
     #[test]
     fn financial_report_uses_standard_fallible_conversion() {
-        let report: FinancialReport = "2024-4".parse().unwrap();
+        let report = FinancialReport::try_from("2024-4").unwrap();
 
         assert_eq!(report.as_str(), "2024-4");
-        assert!("2024-5".parse::<FinancialReport>().is_err());
+        assert!(FinancialReport::try_from("2024-5".to_owned()).is_err());
     }
 }

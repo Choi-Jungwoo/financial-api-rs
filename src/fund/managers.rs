@@ -3,7 +3,7 @@ use serde::de::DeserializeOwned;
 use crate::endpoints;
 use crate::{
     Client, Error, FundManagerDetailData, FundManagerExperienceData, FundManagerPerformanceData,
-    FundManagerStyleData, ManagerId, ManagerPerformanceRange, Response,
+    FundManagerStyleData, ManagerId, ManagerPerformanceRange, Response, ValidationError,
 };
 
 impl Client {
@@ -17,7 +17,7 @@ impl Client {
     )]
     pub async fn fund_managers_investment_style(
         &self,
-        manager_id: impl AsRef<str> + Send,
+        manager_id: impl TryInto<ManagerId, Error: Into<ValidationError>> + Send,
     ) -> Result<Response<FundManagerStyleData>, Error> {
         self.fund_manager(endpoints::FUND_MANAGER_STYLE, manager_id, None)
             .await
@@ -33,7 +33,7 @@ impl Client {
     )]
     pub async fn fund_managers_performance(
         &self,
-        manager_id: impl AsRef<str> + Send,
+        manager_id: impl TryInto<ManagerId, Error: Into<ValidationError>> + Send,
         range: ManagerPerformanceRange,
     ) -> Result<Response<FundManagerPerformanceData>, Error> {
         self.fund_manager(endpoints::FUND_MANAGER_PERFORMANCE, manager_id, Some(range))
@@ -50,7 +50,7 @@ impl Client {
     )]
     pub async fn fund_managers_experience(
         &self,
-        manager_id: impl AsRef<str> + Send,
+        manager_id: impl TryInto<ManagerId, Error: Into<ValidationError>> + Send,
     ) -> Result<Response<FundManagerExperienceData>, Error> {
         self.fund_manager(endpoints::FUND_MANAGER_EXPERIENCE, manager_id, None)
             .await
@@ -66,7 +66,7 @@ impl Client {
     )]
     pub async fn fund_managers_detail(
         &self,
-        manager_id: impl AsRef<str> + Send,
+        manager_id: impl TryInto<ManagerId, Error: Into<ValidationError>> + Send,
     ) -> Result<Response<FundManagerDetailData>, Error> {
         self.fund_manager(endpoints::FUND_MANAGER_DETAIL, manager_id, None)
             .await
@@ -75,10 +75,10 @@ impl Client {
     async fn fund_manager<T: DeserializeOwned>(
         &self,
         path: &str,
-        manager_id: impl AsRef<str> + Send,
+        manager_id: impl TryInto<ManagerId, Error: Into<ValidationError>> + Send,
         range: Option<ManagerPerformanceRange>,
     ) -> Result<Response<T>, Error> {
-        let manager_id = ManagerId::new(manager_id.as_ref())?;
+        let manager_id: ManagerId = manager_id.try_into().map_err(Into::into)?;
         if let Some(range) = range {
             return self
                 .get(

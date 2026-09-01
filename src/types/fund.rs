@@ -46,7 +46,37 @@ macro_rules! identifier_type {
             type Err = ValidationError;
 
             fn from_str(value: &str) -> Result<Self, Self::Err> {
+                Self::try_from(value)
+            }
+        }
+
+        impl TryFrom<&str> for $name {
+            type Error = ValidationError;
+
+            fn try_from(value: &str) -> Result<Self, Self::Error> {
                 Self::new(value)
+            }
+        }
+
+        impl TryFrom<String> for $name {
+            type Error = ValidationError;
+
+            fn try_from(value: String) -> Result<Self, Self::Error> {
+                Self::new(value)
+            }
+        }
+
+        impl TryFrom<&String> for $name {
+            type Error = ValidationError;
+
+            fn try_from(value: &String) -> Result<Self, Self::Error> {
+                Self::new(value)
+            }
+        }
+
+        impl From<&$name> for $name {
+            fn from(value: &$name) -> Self {
+                value.clone()
             }
         }
 
@@ -110,17 +140,43 @@ impl Cursor {
     pub fn as_str(&self) -> &str {
         &self.0
     }
-
-    pub(crate) fn into_string(self) -> String {
-        self.0
-    }
 }
 
 impl FromStr for Cursor {
     type Err = ValidationError;
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::try_from(value)
+    }
+}
+
+impl TryFrom<&str> for Cursor {
+    type Error = ValidationError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
         Self::new(value)
+    }
+}
+
+impl TryFrom<String> for Cursor {
+    type Error = ValidationError;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        Self::new(value)
+    }
+}
+
+impl TryFrom<&String> for Cursor {
+    type Error = ValidationError;
+
+    fn try_from(value: &String) -> Result<Self, Self::Error> {
+        Self::new(value)
+    }
+}
+
+impl From<&Cursor> for Cursor {
+    fn from(value: &Cursor) -> Self {
+        value.clone()
     }
 }
 
@@ -220,8 +276,16 @@ mod tests {
 
     #[test]
     fn endpoint_identifiers_have_distinct_validated_types() {
-        assert_eq!(ManagerId::new("manager-1").unwrap().as_str(), "manager-1");
-        assert_eq!(CompanyId::new("company-1").unwrap().as_str(), "company-1");
+        assert_eq!(
+            ManagerId::try_from("manager-1").unwrap().as_str(),
+            "manager-1"
+        );
+        assert_eq!(
+            CompanyId::try_from("company-1".to_owned())
+                .unwrap()
+                .as_str(),
+            "company-1"
+        );
         assert_eq!(
             Cursor::new("opaque+/cursor==").unwrap().as_str(),
             "opaque+/cursor=="

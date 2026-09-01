@@ -1,5 +1,5 @@
 use crate::endpoints;
-use crate::{Client, Error, FundProfileData, FundType, Response};
+use crate::{Client, Error, FundProfileData, FundType, Response, Thscode, ValidationError};
 
 impl Client {
     /// 获取基金基本资料。
@@ -13,7 +13,7 @@ impl Client {
     pub async fn fund_profile_detail(
         &self,
         fund_type: FundType,
-        thscode: impl AsRef<str> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
     ) -> Result<Response<FundProfileData>, Error> {
         self.fund_detail(endpoints::FUND_PROFILE, fund_type, thscode)
             .await

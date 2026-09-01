@@ -33,6 +33,20 @@ impl UnixMillis {
     }
 }
 
+impl TryFrom<i64> for UnixMillis {
+    type Error = ValidationError;
+
+    fn try_from(value: i64) -> Result<Self, Self::Error> {
+        Self::new(value)
+    }
+}
+
+impl From<&UnixMillis> for UnixMillis {
+    fn from(value: &UnixMillis) -> Self {
+        *value
+    }
+}
+
 impl<'de> Deserialize<'de> for UnixMillis {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = i64::deserialize(deserializer)?;
@@ -78,7 +92,37 @@ impl FromStr for NaturalDate {
     type Err = ValidationError;
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::try_from(value)
+    }
+}
+
+impl TryFrom<&str> for NaturalDate {
+    type Error = ValidationError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
         Self::parse(value)
+    }
+}
+
+impl TryFrom<String> for NaturalDate {
+    type Error = ValidationError;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        Self::parse(&value)
+    }
+}
+
+impl TryFrom<&String> for NaturalDate {
+    type Error = ValidationError;
+
+    fn try_from(value: &String) -> Result<Self, Self::Error> {
+        Self::parse(value)
+    }
+}
+
+impl From<&NaturalDate> for NaturalDate {
+    fn from(value: &NaturalDate) -> Self {
+        *value
     }
 }
 
@@ -130,7 +174,37 @@ impl FromStr for CompactDate {
     type Err = ValidationError;
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::try_from(value)
+    }
+}
+
+impl TryFrom<&str> for CompactDate {
+    type Error = ValidationError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
         Self::parse(value)
+    }
+}
+
+impl TryFrom<String> for CompactDate {
+    type Error = ValidationError;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        Self::parse(&value)
+    }
+}
+
+impl TryFrom<&String> for CompactDate {
+    type Error = ValidationError;
+
+    fn try_from(value: &String) -> Result<Self, Self::Error> {
+        Self::parse(value)
+    }
+}
+
+impl From<&CompactDate> for CompactDate {
+    fn from(value: &CompactDate) -> Self {
+        *value
     }
 }
 
@@ -198,11 +272,11 @@ mod tests {
 
     #[test]
     fn natural_dates_use_standard_conversions() {
-        let date_from_text: NaturalDate = "2024-02-29".parse().unwrap();
+        let date_from_text = NaturalDate::try_from("2024-02-29".to_owned()).unwrap();
         let date_from_value = NaturalDate::from(date!(2024 - 02 - 29));
 
         assert_eq!(date_from_text, date_from_value);
-        assert!("2023-02-29".parse::<NaturalDate>().is_err());
+        assert!(NaturalDate::try_from("2023-02-29").is_err());
     }
 
     #[test]

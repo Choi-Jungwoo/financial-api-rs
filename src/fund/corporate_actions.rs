@@ -1,5 +1,5 @@
 use crate::endpoints;
-use crate::{Client, Error, FundDividendsData, FundType, Response};
+use crate::{Client, Error, FundDividendsData, FundType, Response, Thscode, ValidationError};
 
 impl Client {
     /// 获取基金历史分红记录。
@@ -13,7 +13,7 @@ impl Client {
     pub async fn fund_corporate_actions_dividends(
         &self,
         fund_type: FundType,
-        thscode: impl AsRef<str> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
     ) -> Result<Response<FundDividendsData>, Error> {
         self.fund_detail(endpoints::FUND_DIVIDENDS, fund_type, thscode)
             .await

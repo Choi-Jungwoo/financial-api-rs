@@ -17,9 +17,9 @@ impl Client {
     )]
     pub async fn fund_market_snapshot(
         &self,
-        thscode: impl AsRef<str> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
     ) -> Result<Response<FundMarketSnapshotData>, Error> {
-        let thscode = Thscode::new(thscode)?;
+        let thscode: Thscode = thscode.try_into().map_err(Into::into)?;
         validate_exchange_fund(&thscode)?;
         self.get(
             endpoints::FUND_MARKET_SNAPSHOT,
@@ -38,13 +38,13 @@ impl Client {
     )]
     pub async fn fund_market_historical(
         &self,
-        thscode: impl AsRef<str> + Send,
-        start: i64,
-        end: i64,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
+        start: impl TryInto<UnixMillis, Error: Into<ValidationError>> + Send,
+        end: impl TryInto<UnixMillis, Error: Into<ValidationError>> + Send,
     ) -> Result<Response<FundMarketHistoricalData>, Error> {
-        let thscode = Thscode::new(thscode)?;
-        let start = UnixMillis::new(start)?;
-        let end = UnixMillis::new(end)?;
+        let thscode: Thscode = thscode.try_into().map_err(Into::into)?;
+        let start: UnixMillis = start.try_into().map_err(Into::into)?;
+        let end: UnixMillis = end.try_into().map_err(Into::into)?;
         validate_exchange_fund(&thscode)?;
         validate_history_range(start, end)?;
         let query = [

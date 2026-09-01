@@ -24,7 +24,7 @@ impl Client {
         &self,
         path: &str,
         fund_type: FundType,
-        thscode: impl AsRef<str> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
     ) -> Result<Response<T>, Error> {
         let query = fund_target_query(fund_type, thscode)?;
         self.get(path, &query).await
@@ -33,9 +33,9 @@ impl Client {
 
 fn fund_target_query(
     fund_type: FundType,
-    thscode: impl AsRef<str>,
+    thscode: impl TryInto<Thscode, Error: Into<ValidationError>>,
 ) -> Result<Vec<(&'static str, String)>, ValidationError> {
-    let thscode = Thscode::new(thscode)?;
+    let thscode: Thscode = thscode.try_into().map_err(Into::into)?;
     let (_, suffix) = thscode.ticker_and_suffix();
     let valid = match fund_type {
         FundType::Otc => suffix == "OF",

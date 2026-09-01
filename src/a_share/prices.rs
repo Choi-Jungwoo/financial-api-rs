@@ -21,11 +21,11 @@ enum PriceSnapshotSelectionKind {
 
 impl PriceSnapshotSelection {
     pub fn targets(
-        targets: impl IntoIterator<Item = impl AsRef<str>>,
+        targets: impl IntoIterator<Item = impl TryInto<AShareCode, Error: Into<ValidationError>>>,
     ) -> Result<Self, ValidationError> {
         let targets = targets
             .into_iter()
-            .map(AShareCode::new)
+            .map(|target| target.try_into().map_err(Into::into))
             .collect::<Result<Vec<_>, _>>()?;
         if targets.is_empty() {
             return Err(ValidationError::new("thscodes", "must not be empty"));
@@ -79,15 +79,15 @@ impl Client {
     )]
     pub async fn prices_historical(
         &self,
-        thscode: impl AsRef<str> + Send,
-        start: i64,
-        end: i64,
+        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>> + Send,
+        start: impl TryInto<UnixMillis, Error: Into<ValidationError>> + Send,
+        end: impl TryInto<UnixMillis, Error: Into<ValidationError>> + Send,
         adjustment: Adjustment,
         offset: u32,
     ) -> Result<Response<HistoricalData>, Error> {
-        let thscode = AShareCode::new(thscode)?;
-        let start = UnixMillis::new(start)?;
-        let end = UnixMillis::new(end)?;
+        let thscode: AShareCode = thscode.try_into().map_err(Into::into)?;
+        let start: UnixMillis = start.try_into().map_err(Into::into)?;
+        let end: UnixMillis = end.try_into().map_err(Into::into)?;
         validate_millis_window(start, end, Some(TEN_YEARS_MS))?;
         let query = vec![
             ("thscode", thscode.into_string()),

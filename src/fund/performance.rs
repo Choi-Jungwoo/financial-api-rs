@@ -1,7 +1,7 @@
 use crate::endpoints;
 use crate::{
     Client, Error, FundDrawdownsData, FundIndicatorHistoryData, FundNavData, FundNavType,
-    FundRange, FundReturnsData, FundType, Response, UnixMillis,
+    FundRange, FundReturnsData, FundType, Response, Thscode, UnixMillis, ValidationError,
 };
 
 use super::{fund_target_query, validate_history_range};
@@ -18,7 +18,7 @@ impl Client {
     pub async fn fund_performance_nav(
         &self,
         fund_type: FundType,
-        thscode: impl AsRef<str> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
         range: Option<FundRange>,
         nav_type: FundNavType,
     ) -> Result<Response<FundNavData>, Error> {
@@ -41,7 +41,7 @@ impl Client {
     pub async fn fund_performance_returns(
         &self,
         fund_type: FundType,
-        thscode: impl AsRef<str> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
     ) -> Result<Response<FundReturnsData>, Error> {
         self.fund_detail(endpoints::FUND_RETURNS, fund_type, thscode)
             .await
@@ -58,13 +58,13 @@ impl Client {
     pub async fn fund_performance_indicators_historical(
         &self,
         fund_type: FundType,
-        thscode: impl AsRef<str> + Send,
-        start: i64,
-        end: i64,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
+        start: impl TryInto<UnixMillis, Error: Into<ValidationError>> + Send,
+        end: impl TryInto<UnixMillis, Error: Into<ValidationError>> + Send,
     ) -> Result<Response<FundIndicatorHistoryData>, Error> {
         let mut query = fund_target_query(fund_type, thscode)?;
-        let start = UnixMillis::new(start)?;
-        let end = UnixMillis::new(end)?;
+        let start: UnixMillis = start.try_into().map_err(Into::into)?;
+        let end: UnixMillis = end.try_into().map_err(Into::into)?;
         validate_history_range(start, end)?;
         query.push(("start", start.to_string()));
         query.push(("end", end.to_string()));
@@ -83,7 +83,7 @@ impl Client {
     pub async fn fund_performance_drawdowns(
         &self,
         fund_type: FundType,
-        thscode: impl AsRef<str> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
     ) -> Result<Response<FundDrawdownsData>, Error> {
         self.fund_detail(endpoints::FUND_DRAWDOWNS, fund_type, thscode)
             .await

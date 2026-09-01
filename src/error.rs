@@ -1,3 +1,5 @@
+use std::convert::Infallible;
+
 /// 请求领域值或客户端配置值无效。
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 #[error("invalid {field}: {problem}")]
@@ -21,6 +23,12 @@ impl ValidationError {
     #[must_use]
     pub const fn problem(&self) -> &'static str {
         self.problem
+    }
+}
+
+impl From<Infallible> for ValidationError {
+    fn from(value: Infallible) -> Self {
+        match value {}
     }
 }
 

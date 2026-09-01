@@ -5,7 +5,7 @@ async fn main() -> Result<(), Error> {
     let client = Client::from_env()?;
     let response = client
         .special_data_limit_up_pool(
-            None,
+            "2026-08-25",
             Page::default(),
             LimitUpSortField::LastPrice,
             SortDirection::Descending,

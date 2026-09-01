@@ -25,6 +25,6 @@ pub use types::{
     FinancialIndicatorId, FinancialPeriod, FinancialReport, FiscalPeriod, FundCategoryCode,
     FundNavType, FundRange, FundType, HolderMergeScope, HolderRecordScope, HotListPeriod, IndexTag,
     LimitBreakSortField, LimitDownSortField, LimitUpSortField, ManagerId, ManagerPerformanceRange,
-    NaturalDate, OfferingStatus, Page, PortfolioAssetType, PreciseDecimal, RankTrend, ReportType,
-    ShanghaiDateMillis, SortDirection, Thscode, UnixMillis,
+    NaturalDate, OfferingStatus, OptionalInput, Page, PortfolioAssetType, PreciseDecimal,
+    RankTrend, ReportType, ShanghaiDateMillis, SortDirection, Thscode, UnixMillis,
 };

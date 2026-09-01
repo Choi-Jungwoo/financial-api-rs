@@ -25,9 +25,12 @@ impl FinancialRange {
         Ok(Self(FinancialRangeKind::Recent { limit }))
     }
 
-    pub fn between(start: i64, end: i64) -> Result<Self, ValidationError> {
-        let start = UnixMillis::new(start)?;
-        let end = UnixMillis::new(end)?;
+    pub fn between(
+        start: impl TryInto<UnixMillis, Error: Into<ValidationError>>,
+        end: impl TryInto<UnixMillis, Error: Into<ValidationError>>,
+    ) -> Result<Self, ValidationError> {
+        let start: UnixMillis = start.try_into().map_err(Into::into)?;
+        let end: UnixMillis = end.try_into().map_err(Into::into)?;
         if end.get() < start.get() {
             return Err(ValidationError::new(
                 "end",
@@ -55,7 +58,7 @@ impl Client {
     )]
     pub async fn financials_income_statements(
         &self,
-        thscode: impl AsRef<str> + Send,
+        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>> + Send,
         period: FinancialPeriod,
         range: FinancialRange,
     ) -> Result<Response<IncomeStatementsData>, Error> {
@@ -73,7 +76,7 @@ impl Client {
     )]
     pub async fn financials_balance_sheets(
         &self,
-        thscode: impl AsRef<str> + Send,
+        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>> + Send,
         period: FinancialPeriod,
         range: FinancialRange,
     ) -> Result<Response<BalanceSheetsData>, Error> {
@@ -91,7 +94,7 @@ impl Client {
     )]
     pub async fn financials_cash_flow_statements(
         &self,
-        thscode: impl AsRef<str> + Send,
+        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>> + Send,
         period: FinancialPeriod,
         range: FinancialRange,
     ) -> Result<Response<CashFlowStatementsData>, Error> {
@@ -102,11 +105,11 @@ impl Client {
     async fn financial_statements<T: DeserializeOwned>(
         &self,
         path: &str,
-        thscode: impl AsRef<str> + Send,
+        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>> + Send,
         period: FinancialPeriod,
         range: FinancialRange,
     ) -> Result<Response<T>, Error> {
-        let thscode = AShareCode::new(thscode)?;
+        let thscode: AShareCode = thscode.try_into().map_err(Into::into)?;
         let mut query = vec![
             ("thscode", thscode.into_string()),
             ("period", period.to_string()),
@@ -133,11 +136,11 @@ impl Client {
     )]
     pub async fn financials_indicators(
         &self,
-        thscode: impl AsRef<str> + Send,
-        report: impl AsRef<str> + Send,
+        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>> + Send,
+        report: impl TryInto<FinancialReport, Error: Into<ValidationError>> + Send,
     ) -> Result<Response<FinancialIndicatorsData>, Error> {
-        let thscode = AShareCode::new(thscode)?;
-        let report = FinancialReport::parse(report.as_ref())?;
+        let thscode: AShareCode = thscode.try_into().map_err(Into::into)?;
+        let report: FinancialReport = report.try_into().map_err(Into::into)?;
         let query = [("thscode", thscode.as_str()), ("report", report.as_str())];
         self.get(endpoints::FINANCIAL_INDICATORS, &query).await
     }
