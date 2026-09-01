@@ -12,7 +12,7 @@ impl Client {
     )]
     pub async fn fund_companies_detail(
         &self,
-        company_id: impl TryInto<CompanyId, Error: Into<ValidationError>> + Send,
+        company_id: impl TryInto<CompanyId, Error: Into<ValidationError>>,
     ) -> Result<Response<FundCompanyData>, Error> {
         let company_id: CompanyId = company_id.try_into().map_err(Into::into)?;
         self.get(

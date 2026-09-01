@@ -13,8 +13,7 @@ impl Client {
     )]
     pub async fn a_share_valuations_snapshot(
         &self,
-        thscodes: impl IntoIterator<Item = impl TryInto<AShareCode, Error: Into<ValidationError>>>
-        + Send,
+        thscodes: impl IntoIterator<Item = impl TryInto<AShareCode, Error: Into<ValidationError>>>,
     ) -> Result<Response<ValuationsData>, Error> {
         let query = [("thscodes", join_a_share_codes(thscodes, Some(100))?)];
         self.get(endpoints::VALUATIONS_SNAPSHOT, &query).await

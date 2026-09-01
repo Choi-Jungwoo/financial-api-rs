@@ -18,7 +18,7 @@ impl Client {
     pub async fn fund_performance_nav(
         &self,
         fund_type: FundType,
-        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>>,
         range: Option<FundRange>,
         nav_type: FundNavType,
     ) -> Result<Response<FundNavData>, Error> {
@@ -41,7 +41,7 @@ impl Client {
     pub async fn fund_performance_returns(
         &self,
         fund_type: FundType,
-        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>>,
     ) -> Result<Response<FundReturnsData>, Error> {
         self.fund_detail(endpoints::FUND_RETURNS, fund_type, thscode)
             .await
@@ -58,9 +58,9 @@ impl Client {
     pub async fn fund_performance_indicators_historical(
         &self,
         fund_type: FundType,
-        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
-        start: impl TryInto<UnixMillis, Error: Into<ValidationError>> + Send,
-        end: impl TryInto<UnixMillis, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>>,
+        start: impl TryInto<UnixMillis, Error: Into<ValidationError>>,
+        end: impl TryInto<UnixMillis, Error: Into<ValidationError>>,
     ) -> Result<Response<FundIndicatorHistoryData>, Error> {
         let mut query = fund_target_query(fund_type, thscode)?;
         let start: UnixMillis = start.try_into().map_err(Into::into)?;
@@ -83,7 +83,7 @@ impl Client {
     pub async fn fund_performance_drawdowns(
         &self,
         fund_type: FundType,
-        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>>,
     ) -> Result<Response<FundDrawdownsData>, Error> {
         self.fund_detail(endpoints::FUND_DRAWDOWNS, fund_type, thscode)
             .await

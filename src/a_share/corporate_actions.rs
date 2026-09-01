@@ -17,9 +17,9 @@ impl Client {
     )]
     pub async fn corp_actions_adjustment_factors(
         &self,
-        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>> + Send,
-        from: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>> + Send,
-        to: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>>,
+        from: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>>,
+        to: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>>,
     ) -> Result<Response<AdjustmentFactorsData>, Error> {
         let thscode: AShareCode = thscode.try_into().map_err(Into::into)?;
         let from: OptionalInput<NaturalDate> = from.try_into().map_err(Into::into)?;

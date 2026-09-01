@@ -43,8 +43,7 @@ impl Client {
     )]
     pub async fn special_data_anomaly_analysis_stock(
         &self,
-        thscodes: impl IntoIterator<Item = impl TryInto<AShareCode, Error: Into<ValidationError>>>
-        + Send,
+        thscodes: impl IntoIterator<Item = impl TryInto<AShareCode, Error: Into<ValidationError>>>,
     ) -> Result<Response<AnomalyData>, Error> {
         let query = [("thscodes", join_a_share_codes(thscodes, Some(50))?)];
         self.get(endpoints::ANOMALY_STOCK, &query).await
@@ -61,7 +60,7 @@ impl Client {
     pub async fn special_data_dragon_tiger_list(
         &self,
         board_type: DragonTigerBoard,
-        date: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>> + Send,
+        date: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>>,
     ) -> Result<Response<DragonTigerData>, Error> {
         let date: OptionalInput<NaturalDate> = date.try_into().map_err(Into::into)?;
         let date = date.into_inner();
@@ -101,7 +100,7 @@ impl Client {
     )]
     pub async fn special_data_hot_stock_list_history(
         &self,
-        date: impl TryInto<NaturalDate, Error: Into<ValidationError>> + Send,
+        date: impl TryInto<NaturalDate, Error: Into<ValidationError>>,
     ) -> Result<Response<HotStockHistoryData>, Error> {
         let date: NaturalDate = date.try_into().map_err(Into::into)?;
         self.validate_recent_date(date, "date")?;
@@ -119,9 +118,9 @@ impl Client {
     )]
     pub async fn special_data_hot_stock_rank_trend(
         &self,
-        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>> + Send,
-        start_date: impl TryInto<NaturalDate, Error: Into<ValidationError>> + Send,
-        end_date: impl TryInto<NaturalDate, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>>,
+        start_date: impl TryInto<NaturalDate, Error: Into<ValidationError>>,
+        end_date: impl TryInto<NaturalDate, Error: Into<ValidationError>>,
     ) -> Result<Response<HotStockTrendData>, Error> {
         let thscode: AShareCode = thscode.try_into().map_err(Into::into)?;
         let start_date: NaturalDate = start_date.try_into().map_err(Into::into)?;
@@ -155,7 +154,7 @@ impl Client {
     )]
     pub async fn special_data_limit_up_pool(
         &self,
-        date: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>> + Send,
+        date: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>>,
         page: Page,
         sort_field: LimitUpSortField,
         sort_dir: SortDirection,
@@ -174,7 +173,7 @@ impl Client {
     )]
     pub async fn special_data_limit_down_pool(
         &self,
-        date: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>> + Send,
+        date: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>>,
         page: Page,
         sort_field: LimitDownSortField,
         sort_dir: SortDirection,
@@ -193,7 +192,7 @@ impl Client {
     )]
     pub async fn special_data_limit_break_pool(
         &self,
-        date: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>> + Send,
+        date: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>>,
         page: Page,
         sort_field: LimitBreakSortField,
         sort_dir: SortDirection,
@@ -211,7 +210,7 @@ impl Client {
     async fn special_data_pool<T: DeserializeOwned>(
         &self,
         path: &str,
-        date: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>> + Send,
+        date: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>>,
         page: Page,
         sort_field: impl std::fmt::Display,
         sort_dir: SortDirection,

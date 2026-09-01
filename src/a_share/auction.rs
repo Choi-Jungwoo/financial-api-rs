@@ -16,8 +16,7 @@ impl Client {
     )]
     pub async fn a_share_auction_snapshot(
         &self,
-        thscodes: impl IntoIterator<Item = impl TryInto<AShareCode, Error: Into<ValidationError>>>
-        + Send,
+        thscodes: impl IntoIterator<Item = impl TryInto<AShareCode, Error: Into<ValidationError>>>,
         stage: AuctionStage,
     ) -> Result<Response<AuctionSnapshotData>, Error> {
         let query = [
@@ -37,7 +36,7 @@ impl Client {
     )]
     pub async fn a_share_auction_short_term_benchmark(
         &self,
-        date: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>> + Send,
+        date: impl TryInto<OptionalInput<NaturalDate>, Error: Into<ValidationError>>,
     ) -> Result<Response<AuctionBenchmarkData>, Error> {
         let date: OptionalInput<NaturalDate> = date.try_into().map_err(Into::into)?;
         let query = date

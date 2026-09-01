@@ -13,7 +13,7 @@ impl Client {
     pub async fn fund_profile_detail(
         &self,
         fund_type: FundType,
-        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>>,
     ) -> Result<Response<FundProfileData>, Error> {
         self.fund_detail(endpoints::FUND_PROFILE, fund_type, thscode)
             .await

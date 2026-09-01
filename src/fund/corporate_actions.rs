@@ -13,7 +13,7 @@ impl Client {
     pub async fn fund_corporate_actions_dividends(
         &self,
         fund_type: FundType,
-        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>>,
     ) -> Result<Response<FundDividendsData>, Error> {
         self.fund_detail(endpoints::FUND_DIVIDENDS, fund_type, thscode)
             .await

@@ -18,7 +18,7 @@ impl Client {
     pub async fn fund_holders_detail(
         &self,
         fund_type: FundType,
-        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>>,
         merge_scope: HolderMergeScope,
     ) -> Result<Response<FundHoldersData>, Error> {
         let mut query = fund_target_query(fund_type, thscode)?;
@@ -37,7 +37,7 @@ impl Client {
     pub async fn fund_holders_top(
         &self,
         fund_type: FundType,
-        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>>,
         limit: Option<u8>,
     ) -> Result<Response<FundTopHoldersData>, Error> {
         let mut query = fund_target_query(fund_type, thscode)?;

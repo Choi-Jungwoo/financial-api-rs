@@ -58,7 +58,7 @@ impl Client {
     )]
     pub async fn financials_income_statements(
         &self,
-        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>>,
         period: FinancialPeriod,
         range: FinancialRange,
     ) -> Result<Response<IncomeStatementsData>, Error> {
@@ -76,7 +76,7 @@ impl Client {
     )]
     pub async fn financials_balance_sheets(
         &self,
-        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>>,
         period: FinancialPeriod,
         range: FinancialRange,
     ) -> Result<Response<BalanceSheetsData>, Error> {
@@ -94,7 +94,7 @@ impl Client {
     )]
     pub async fn financials_cash_flow_statements(
         &self,
-        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>>,
         period: FinancialPeriod,
         range: FinancialRange,
     ) -> Result<Response<CashFlowStatementsData>, Error> {
@@ -105,7 +105,7 @@ impl Client {
     async fn financial_statements<T: DeserializeOwned>(
         &self,
         path: &str,
-        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>>,
         period: FinancialPeriod,
         range: FinancialRange,
     ) -> Result<Response<T>, Error> {
@@ -136,8 +136,8 @@ impl Client {
     )]
     pub async fn financials_indicators(
         &self,
-        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>> + Send,
-        report: impl TryInto<FinancialReport, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>>,
+        report: impl TryInto<FinancialReport, Error: Into<ValidationError>>,
     ) -> Result<Response<FinancialIndicatorsData>, Error> {
         let thscode: AShareCode = thscode.try_into().map_err(Into::into)?;
         let report: FinancialReport = report.try_into().map_err(Into::into)?;

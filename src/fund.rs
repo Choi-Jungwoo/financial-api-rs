@@ -24,7 +24,7 @@ impl Client {
         &self,
         path: &str,
         fund_type: FundType,
-        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>>,
     ) -> Result<Response<T>, Error> {
         let query = fund_target_query(fund_type, thscode)?;
         self.get(path, &query).await

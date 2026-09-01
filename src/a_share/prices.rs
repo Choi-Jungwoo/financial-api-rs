@@ -79,9 +79,9 @@ impl Client {
     )]
     pub async fn prices_historical(
         &self,
-        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>> + Send,
-        start: impl TryInto<UnixMillis, Error: Into<ValidationError>> + Send,
-        end: impl TryInto<UnixMillis, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<AShareCode, Error: Into<ValidationError>>,
+        start: impl TryInto<UnixMillis, Error: Into<ValidationError>>,
+        end: impl TryInto<UnixMillis, Error: Into<ValidationError>>,
         adjustment: Adjustment,
         offset: u32,
     ) -> Result<Response<HistoricalData>, Error> {

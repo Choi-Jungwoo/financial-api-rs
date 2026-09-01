@@ -19,7 +19,7 @@ impl Client {
     pub async fn fund_portfolio_holdings(
         &self,
         fund_type: FundType,
-        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>>,
     ) -> Result<Response<FundHoldingsData>, Error> {
         self.fund_detail(endpoints::FUND_HOLDINGS, fund_type, thscode)
             .await
@@ -36,9 +36,9 @@ impl Client {
     pub async fn fund_portfolio_stock_history(
         &self,
         fund_type: FundType,
-        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
-        report_type: impl TryInto<ReportType, Error: Into<ValidationError>> + Send,
-        end_date: impl TryInto<NaturalDate, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>>,
+        report_type: impl TryInto<ReportType, Error: Into<ValidationError>>,
+        end_date: impl TryInto<NaturalDate, Error: Into<ValidationError>>,
     ) -> Result<Response<FundPortfolioHistoryData>, Error> {
         self.fund_portfolio_history(
             endpoints::FUND_STOCK_HISTORY,
@@ -61,9 +61,9 @@ impl Client {
     pub async fn fund_portfolio_bond_history(
         &self,
         fund_type: FundType,
-        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
-        report_type: impl TryInto<ReportType, Error: Into<ValidationError>> + Send,
-        end_date: impl TryInto<NaturalDate, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>>,
+        report_type: impl TryInto<ReportType, Error: Into<ValidationError>>,
+        end_date: impl TryInto<NaturalDate, Error: Into<ValidationError>>,
     ) -> Result<Response<FundPortfolioHistoryData>, Error> {
         self.fund_portfolio_history(
             endpoints::FUND_BOND_HISTORY,
@@ -79,9 +79,9 @@ impl Client {
         &self,
         path: &str,
         fund_type: FundType,
-        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
-        report_type: impl TryInto<ReportType, Error: Into<ValidationError>> + Send,
-        end_date: impl TryInto<NaturalDate, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>>,
+        report_type: impl TryInto<ReportType, Error: Into<ValidationError>>,
+        end_date: impl TryInto<NaturalDate, Error: Into<ValidationError>>,
     ) -> Result<Response<FundPortfolioHistoryData>, Error> {
         let mut query = fund_target_query(fund_type, thscode)?;
         let report_type: ReportType = report_type.try_into().map_err(Into::into)?;
@@ -102,8 +102,8 @@ impl Client {
     pub async fn fund_portfolio_stock_report_dates(
         &self,
         fund_type: FundType,
-        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
-        report_type: impl TryInto<OptionalInput<ReportType>, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>>,
+        report_type: impl TryInto<OptionalInput<ReportType>, Error: Into<ValidationError>>,
     ) -> Result<Response<FundReportDatesData>, Error> {
         self.fund_report_dates(
             endpoints::FUND_STOCK_REPORT_DATES,
@@ -125,8 +125,8 @@ impl Client {
     pub async fn fund_portfolio_bond_report_dates(
         &self,
         fund_type: FundType,
-        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
-        report_type: impl TryInto<OptionalInput<ReportType>, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>>,
+        report_type: impl TryInto<OptionalInput<ReportType>, Error: Into<ValidationError>>,
     ) -> Result<Response<FundReportDatesData>, Error> {
         self.fund_report_dates(
             endpoints::FUND_BOND_REPORT_DATES,
@@ -141,8 +141,8 @@ impl Client {
         &self,
         path: &str,
         fund_type: FundType,
-        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
-        report_type: impl TryInto<OptionalInput<ReportType>, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>>,
+        report_type: impl TryInto<OptionalInput<ReportType>, Error: Into<ValidationError>>,
     ) -> Result<Response<FundReportDatesData>, Error> {
         let mut query = fund_target_query(fund_type, thscode)?;
         let report_type: OptionalInput<ReportType> = report_type.try_into().map_err(Into::into)?;
@@ -163,7 +163,7 @@ impl Client {
     pub async fn fund_portfolio_asset_allocation(
         &self,
         fund_type: FundType,
-        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>>,
     ) -> Result<Response<FundAssetAllocationData>, Error> {
         self.fund_detail(endpoints::FUND_ASSET_ALLOCATION, fund_type, thscode)
             .await
@@ -180,7 +180,7 @@ impl Client {
     pub async fn fund_portfolio_industry_allocation(
         &self,
         fund_type: FundType,
-        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>>,
     ) -> Result<Response<FundIndustryAllocationData>, Error> {
         self.fund_detail(endpoints::FUND_INDUSTRY_ALLOCATION, fund_type, thscode)
             .await

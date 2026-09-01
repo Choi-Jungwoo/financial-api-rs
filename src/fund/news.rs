@@ -15,7 +15,7 @@ impl Client {
     pub async fn fund_news_article_list(
         &self,
         fund_type: FundType,
-        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>>,
         limit: Option<u32>,
         offset: Option<&Cursor>,
     ) -> Result<Response<FundNewsData>, Error> {

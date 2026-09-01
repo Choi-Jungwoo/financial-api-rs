@@ -33,7 +33,7 @@ impl Client {
     )]
     pub async fn index_constituents_ths_stock_list(
         &self,
-        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>>,
     ) -> Result<Response<IndexConstituentsData>, Error> {
         let thscode: Thscode = thscode.try_into().map_err(Into::into)?;
         self.get(
@@ -53,7 +53,7 @@ impl Client {
     )]
     pub async fn index_prices_snapshot(
         &self,
-        thscodes: impl IntoIterator<Item = impl TryInto<Thscode, Error: Into<ValidationError>>> + Send,
+        thscodes: impl IntoIterator<Item = impl TryInto<Thscode, Error: Into<ValidationError>>>,
     ) -> Result<Response<PriceSnapshotData>, Error> {
         self.get(
             endpoints::INDEX_SNAPSHOT,
@@ -72,9 +72,9 @@ impl Client {
     )]
     pub async fn index_prices_historical(
         &self,
-        thscode: impl TryInto<Thscode, Error: Into<ValidationError>> + Send,
-        start: impl TryInto<UnixMillis, Error: Into<ValidationError>> + Send,
-        end: impl TryInto<UnixMillis, Error: Into<ValidationError>> + Send,
+        thscode: impl TryInto<Thscode, Error: Into<ValidationError>>,
+        start: impl TryInto<UnixMillis, Error: Into<ValidationError>>,
+        end: impl TryInto<UnixMillis, Error: Into<ValidationError>>,
     ) -> Result<Response<IndexHistoricalData>, Error> {
         let thscode: Thscode = thscode.try_into().map_err(Into::into)?;
         let start: UnixMillis = start.try_into().map_err(Into::into)?;
@@ -108,8 +108,20 @@ fn validate_history_window(start: UnixMillis, end: UnixMillis) -> Result<(), Val
 
 #[cfg(test)]
 mod tests {
+    use std::rc::Rc;
+
     use super::*;
     use crate::ApiKey;
+
+    struct LocalThscode(Rc<str>);
+
+    impl TryFrom<LocalThscode> for Thscode {
+        type Error = ValidationError;
+
+        fn try_from(value: LocalThscode) -> Result<Self, Self::Error> {
+            Self::new(value.0)
+        }
+    }
 
     #[test]
     fn historical_window_enforces_order_and_ten_year_limit() {
@@ -143,5 +155,20 @@ mod tests {
                 .unwrap_err();
             assert!(matches!(error, Error::InvalidInput(_)));
         }
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn endpoint_input_does_not_require_send() {
+        let client = Client::builder(ApiKey::new("test-api-key").unwrap())
+            .base_url("http://127.0.0.1:9")
+            .build()
+            .unwrap();
+
+        let error = client
+            .index_constituents_ths_stock_list(LocalThscode(Rc::from("invalid")))
+            .await
+            .unwrap_err();
+
+        assert!(matches!(error, Error::InvalidInput(_)));
     }
 }
