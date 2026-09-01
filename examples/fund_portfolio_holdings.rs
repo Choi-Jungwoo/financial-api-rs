@@ -1,15 +1,11 @@
-include!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/examples/configuration/client.rs"
-));
-
-use financial_api::{FundType, Thscode};
+use financial_api::{Client, Error, FundType};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = from_env()?;
-    let fund = Thscode::new("025480.OF")?;
-    let response = client.fund_portfolio_holdings(FundType::Otc, &fund).await?;
+async fn main() -> Result<(), Error> {
+    let client = Client::from_env()?;
+    let response = client
+        .fund_portfolio_holdings(FundType::Otc, "025480.OF")
+        .await?;
 
     println!("request_id={}", response.request_id());
     println!("{:#?}", response.data());

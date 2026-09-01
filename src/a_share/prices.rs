@@ -1,3 +1,5 @@
+use std::num::NonZeroU32;
+
 use crate::endpoints;
 use crate::endpoints::join_values;
 use crate::{
@@ -9,24 +11,36 @@ use super::{TEN_YEARS_MS, validate_millis_window};
 
 /// 显式指定的标的，或完整 A 股标的宇宙中的一页。
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum PriceSnapshotSelection {
+pub struct PriceSnapshotSelection(PriceSnapshotSelectionKind);
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum PriceSnapshotSelectionKind {
     Targets(Vec<AShareCode>),
-    MarketPage { limit: u32, offset: u32 },
+    MarketPage { limit: NonZeroU32, offset: u32 },
 }
 
 impl PriceSnapshotSelection {
-    pub fn targets(targets: Vec<AShareCode>) -> Result<Self, ValidationError> {
+    pub fn targets(
+        targets: impl IntoIterator<Item = impl AsRef<str>>,
+    ) -> Result<Self, ValidationError> {
+        let targets = targets
+            .into_iter()
+            .map(AShareCode::new)
+            .collect::<Result<Vec<_>, _>>()?;
         if targets.is_empty() {
             return Err(ValidationError::new("thscodes", "must not be empty"));
         }
-        Ok(Self::Targets(targets))
+        Ok(Self(PriceSnapshotSelectionKind::Targets(targets)))
     }
 
     pub const fn market_page(limit: u32, offset: u32) -> Result<Self, ValidationError> {
-        if limit == 0 {
+        let Some(limit) = NonZeroU32::new(limit) else {
             return Err(ValidationError::new("limit", "must be at least 1"));
-        }
-        Ok(Self::MarketPage { limit, offset })
+        };
+        Ok(Self(PriceSnapshotSelectionKind::MarketPage {
+            limit,
+            offset,
+        }))
     }
 }
 
@@ -43,13 +57,14 @@ impl Client {
         &self,
         selection: &PriceSnapshotSelection,
     ) -> Result<Response<PriceSnapshotData>, Error> {
-        let query = match selection {
-            PriceSnapshotSelection::Targets(codes) => {
+        let query = match &selection.0 {
+            PriceSnapshotSelectionKind::Targets(codes) => {
                 vec![("thscodes", join_values("thscodes", codes, None)?)]
             }
-            PriceSnapshotSelection::MarketPage { limit, offset } => {
-                vec![("limit", limit.to_string()), ("offset", offset.to_string())]
-            }
+            PriceSnapshotSelectionKind::MarketPage { limit, offset } => vec![
+                ("limit", limit.get().to_string()),
+                ("offset", offset.to_string()),
+            ],
         };
         self.get(endpoints::PRICES_SNAPSHOT, &query).await
     }
@@ -64,15 +79,18 @@ impl Client {
     )]
     pub async fn prices_historical(
         &self,
-        thscode: &AShareCode,
-        start: UnixMillis,
-        end: UnixMillis,
+        thscode: impl AsRef<str> + Send,
+        start: i64,
+        end: i64,
         adjustment: Adjustment,
         offset: u32,
     ) -> Result<Response<HistoricalData>, Error> {
+        let thscode = AShareCode::new(thscode)?;
+        let start = UnixMillis::new(start)?;
+        let end = UnixMillis::new(end)?;
         validate_millis_window(start, end, Some(TEN_YEARS_MS))?;
         let query = vec![
-            ("thscode", thscode.to_string()),
+            ("thscode", thscode.into_string()),
             ("interval", "1d".to_owned()),
             ("start", start.to_string()),
             ("end", end.to_string()),
@@ -90,7 +108,7 @@ mod tests {
 
     #[test]
     fn snapshot_selection_rejects_empty_targets_and_zero_page_size() {
-        assert!(PriceSnapshotSelection::targets(Vec::new()).is_err());
+        assert!(PriceSnapshotSelection::targets(Vec::<&str>::new()).is_err());
         assert!(PriceSnapshotSelection::market_page(0, 0).is_err());
         assert!(PriceSnapshotSelection::market_page(10_001, 0).is_ok());
 
@@ -113,7 +131,7 @@ mod tests {
 
         for end in invalid_ends {
             let error = client
-                .prices_historical(&stock, start, end, Adjustment::None, 0)
+                .prices_historical(&stock, start.get(), end.get(), Adjustment::None, 0)
                 .await
                 .unwrap_err();
             assert!(matches!(error, Error::InvalidInput(_)));

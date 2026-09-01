@@ -14,11 +14,14 @@ impl Client {
     )]
     pub async fn corp_actions_adjustment_factors(
         &self,
-        thscode: &AShareCode,
-        from: Option<NaturalDate>,
-        to: Option<NaturalDate>,
+        thscode: impl AsRef<str> + Send,
+        from: Option<&str>,
+        to: Option<&str>,
     ) -> Result<Response<AdjustmentFactorsData>, Error> {
-        let mut query = vec![("thscode", thscode.to_string())];
+        let thscode = AShareCode::new(thscode)?;
+        let from = from.map(NaturalDate::parse).transpose()?;
+        let to = to.map(NaturalDate::parse).transpose()?;
+        let mut query = vec![("thscode", thscode.into_string())];
         if let (Some(from), Some(to)) = (from, to) {
             validate_date_order(from, to, "to")?;
         }
@@ -46,11 +49,7 @@ mod tests {
         let stock = AShareCode::new("600519.SH").unwrap();
 
         let error = client
-            .corp_actions_adjustment_factors(
-                &stock,
-                Some(NaturalDate::parse("2026-08-25").unwrap()),
-                Some(NaturalDate::parse("2026-08-24").unwrap()),
-            )
+            .corp_actions_adjustment_factors(&stock, Some("2026-08-25"), Some("2026-08-24"))
             .await
             .unwrap_err();
 

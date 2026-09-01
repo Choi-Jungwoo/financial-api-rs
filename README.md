@@ -26,12 +26,12 @@ export HITHINK_FINANCE_API_KEY='<your-api-key>'
 然后创建客户端并调用端点：
 
 ```rust,no_run
-use financial_api::{Client, Error, SearchQuery, TickerSearchRequest};
+use financial_api::{Client, Error, TickerSearchRequest};
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let client = Client::from_env()?;
-    let request = TickerSearchRequest::new(SearchQuery::new("贵州茅台")?);
+    let request = TickerSearchRequest::new("贵州茅台")?;
     let response = client.tickers_search(&request).await?;
 
     println!("request_id={}", response.request_id());
@@ -118,8 +118,11 @@ JSON。全市场导出接口返回 `MarketDumpUrl`；其中预签名 URL 包装�
 - `AShareCode` 进一步限制为六位数字加 `.SH`、`.SZ` 或 `.BJ`。
 - `NaturalDate` 验证 `YYYY-MM-DD` 和真实公历日期。
 - `UnixMillis` 拒绝负时间戳。
-- `FinancialRange` 通过枚举让“最近 N 期”和“起止时间”互斥。
+- `FinancialRange` 通过受控构造让“最近 N 期”和“起止时间”互斥。
 - 复权、报告频率、基金类型、排行榜周期、排序字段等有限集合均使用枚举。
+
+端点方法直接接受标的代码、日期、报告类型和游标的字符串表示，并在方法边界完成规范化与
+校验；调用者只在需要持久保存或复用已验证值时才需要显式构造领域类型。
 
 无损转换实现 `From`；可能失败的外部文本转换实现 `FromStr` 或显式构造函数，避免绕过领域
 校验。

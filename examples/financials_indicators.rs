@@ -1,16 +1,9 @@
-include!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/examples/configuration/client.rs"
-));
-
-use financial_api::{AShareCode, FinancialReport};
+use financial_api::{Client, Error};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = from_env()?;
-    let target = AShareCode::new("600519.SH")?;
-    let report = FinancialReport::parse("2025-4")?;
-    let response = client.financials_indicators(&target, &report).await?;
+async fn main() -> Result<(), Error> {
+    let client = Client::from_env()?;
+    let response = client.financials_indicators("600519.SH", "2025-4").await?;
 
     println!("request_id={}", response.request_id());
     println!("{:#?}", response.data());

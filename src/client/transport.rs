@@ -7,7 +7,7 @@ use crate::{Error, ValidationError};
 impl Client {
     pub(crate) async fn get<Q, T>(&self, path: &str, query: &Q) -> Result<Response<T>, Error>
     where
-        Q: Serialize + ?Sized,
+        Q: Serialize + Sync + ?Sized,
         T: DeserializeOwned,
     {
         let url = self

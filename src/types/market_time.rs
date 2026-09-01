@@ -7,6 +7,8 @@ use time::{Date, Time};
 
 use crate::ValidationError;
 
+pub(crate) const TEN_YEARS_MS: i64 = 315_576_000_000;
+
 /// 非负 Unix 毫秒时间戳。
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, derive_more::Display,

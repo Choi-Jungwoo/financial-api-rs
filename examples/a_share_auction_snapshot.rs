@@ -1,16 +1,10 @@
-include!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/examples/configuration/client.rs"
-));
-
-use financial_api::{AShareCode, AuctionStage};
+use financial_api::{AuctionStage, Client, Error};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = from_env()?;
-    let targets = [AShareCode::new("600519.SH")?];
+async fn main() -> Result<(), Error> {
+    let client = Client::from_env()?;
     let response = client
-        .a_share_auction_snapshot(&targets, AuctionStage::Final)
+        .a_share_auction_snapshot(&["600519.SH"], AuctionStage::Final)
         .await?;
 
     println!("request_id={}", response.request_id());

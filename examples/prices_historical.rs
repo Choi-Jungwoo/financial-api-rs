@@ -1,18 +1,16 @@
-include!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/examples/configuration/client.rs"
-));
-
-use financial_api::{AShareCode, Adjustment, UnixMillis};
+use financial_api::{Adjustment, Client, Error};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = from_env()?;
-    let target = AShareCode::new("600519.SH")?;
-    let start = UnixMillis::new(1_716_105_600_000)?;
-    let end = UnixMillis::new(1_716_192_000_000)?;
+async fn main() -> Result<(), Error> {
+    let client = Client::from_env()?;
     let response = client
-        .prices_historical(&target, start, end, Adjustment::None, 0)
+        .prices_historical(
+            "600519.SH",
+            1_716_105_600_000,
+            1_716_192_000_000,
+            Adjustment::None,
+            0,
+        )
         .await?;
 
     println!("request_id={}", response.request_id());

@@ -1,12 +1,48 @@
 use serde::de::DeserializeOwned;
 
 use crate::endpoints;
+use crate::types::TEN_YEARS_MS;
 use crate::{
     AShareCode, BalanceSheetsData, CashFlowStatementsData, Client, Error, FinancialIndicatorsData,
-    FinancialPeriod, FinancialRange, FinancialReport, IncomeStatementsData, Response,
+    FinancialPeriod, FinancialReport, IncomeStatementsData, Response, UnixMillis, ValidationError,
 };
 
-use super::{TEN_YEARS_MS, validate_millis_window};
+/// “最近报告期”和“时间戳区间”互斥的财务查询。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FinancialRange(FinancialRangeKind);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum FinancialRangeKind {
+    Recent { limit: u8 },
+    Between { start: UnixMillis, end: UnixMillis },
+}
+
+impl FinancialRange {
+    pub const fn recent(limit: u8) -> Result<Self, ValidationError> {
+        if limit == 0 || limit > 20 {
+            return Err(ValidationError::new("limit", "must be in the range 1..=20"));
+        }
+        Ok(Self(FinancialRangeKind::Recent { limit }))
+    }
+
+    pub fn between(start: i64, end: i64) -> Result<Self, ValidationError> {
+        let start = UnixMillis::new(start)?;
+        let end = UnixMillis::new(end)?;
+        if end.get() < start.get() {
+            return Err(ValidationError::new(
+                "end",
+                "must not be earlier than start",
+            ));
+        }
+        if end.get() - start.get() > TEN_YEARS_MS {
+            return Err(ValidationError::new(
+                "end",
+                "requested time window exceeds ten years",
+            ));
+        }
+        Ok(Self(FinancialRangeKind::Between { start, end }))
+    }
+}
 
 impl Client {
     /// 获取利润表。
@@ -19,7 +55,7 @@ impl Client {
     )]
     pub async fn financials_income_statements(
         &self,
-        thscode: &AShareCode,
+        thscode: impl AsRef<str> + Send,
         period: FinancialPeriod,
         range: FinancialRange,
     ) -> Result<Response<IncomeStatementsData>, Error> {
@@ -37,7 +73,7 @@ impl Client {
     )]
     pub async fn financials_balance_sheets(
         &self,
-        thscode: &AShareCode,
+        thscode: impl AsRef<str> + Send,
         period: FinancialPeriod,
         range: FinancialRange,
     ) -> Result<Response<BalanceSheetsData>, Error> {
@@ -55,7 +91,7 @@ impl Client {
     )]
     pub async fn financials_cash_flow_statements(
         &self,
-        thscode: &AShareCode,
+        thscode: impl AsRef<str> + Send,
         period: FinancialPeriod,
         range: FinancialRange,
     ) -> Result<Response<CashFlowStatementsData>, Error> {
@@ -66,18 +102,20 @@ impl Client {
     async fn financial_statements<T: DeserializeOwned>(
         &self,
         path: &str,
-        thscode: &AShareCode,
+        thscode: impl AsRef<str> + Send,
         period: FinancialPeriod,
         range: FinancialRange,
     ) -> Result<Response<T>, Error> {
+        let thscode = AShareCode::new(thscode)?;
         let mut query = vec![
-            ("thscode", thscode.to_string()),
+            ("thscode", thscode.into_string()),
             ("period", period.to_string()),
         ];
-        match range {
-            FinancialRange::Recent { limit } => query.push(("limit", limit.to_string())),
-            FinancialRange::Between { start, end } => {
-                validate_millis_window(start, end, Some(TEN_YEARS_MS))?;
+        match range.0 {
+            FinancialRangeKind::Recent { limit } => {
+                query.push(("limit", limit.to_string()));
+            }
+            FinancialRangeKind::Between { start, end } => {
                 query.push(("start", start.to_string()));
                 query.push(("end", end.to_string()));
             }
@@ -95,10 +133,32 @@ impl Client {
     )]
     pub async fn financials_indicators(
         &self,
-        thscode: &AShareCode,
-        report: &FinancialReport,
+        thscode: impl AsRef<str> + Send,
+        report: impl AsRef<str> + Send,
     ) -> Result<Response<FinancialIndicatorsData>, Error> {
+        let thscode = AShareCode::new(thscode)?;
+        let report = FinancialReport::parse(report.as_ref())?;
         let query = [("thscode", thscode.as_str()), ("report", report.as_str())];
         self.get(endpoints::FINANCIAL_INDICATORS, &query).await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::FinancialRange;
+
+    #[test]
+    fn financial_range_rejects_invalid_limits_and_reversed_windows() {
+        assert!(FinancialRange::recent(1).is_ok());
+        assert!(FinancialRange::recent(20).is_ok());
+        assert!(FinancialRange::recent(0).is_err());
+        assert!(FinancialRange::recent(21).is_err());
+
+        assert!(FinancialRange::between(1_700_000_000_000, 1_600_000_000_000).is_err());
+    }
+
+    #[test]
+    fn financial_range_rejects_windows_over_ten_years_at_construction() {
+        assert!(FinancialRange::between(1_000_000_000_000, 1_315_576_000_001).is_err());
     }
 }

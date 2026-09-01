@@ -1,7 +1,7 @@
 use crate::endpoints;
 use crate::{
     Client, Error, FundBalanceSheetsData, FundFinancialIndicatorsData, FundIncomeStatementsData,
-    FundType, Response, Thscode,
+    FundType, Response,
 };
 
 impl Client {
@@ -16,7 +16,7 @@ impl Client {
     pub async fn fund_financials_indicators(
         &self,
         fund_type: FundType,
-        thscode: &Thscode,
+        thscode: impl AsRef<str> + Send,
     ) -> Result<Response<FundFinancialIndicatorsData>, Error> {
         self.fund_detail(endpoints::FUND_INDICATORS, fund_type, thscode)
             .await
@@ -33,7 +33,7 @@ impl Client {
     pub async fn fund_financials_income_statements(
         &self,
         fund_type: FundType,
-        thscode: &Thscode,
+        thscode: impl AsRef<str> + Send,
     ) -> Result<Response<FundIncomeStatementsData>, Error> {
         self.fund_detail(endpoints::FUND_INCOME_STATEMENTS, fund_type, thscode)
             .await
@@ -50,7 +50,7 @@ impl Client {
     pub async fn fund_financials_balance_sheets(
         &self,
         fund_type: FundType,
-        thscode: &Thscode,
+        thscode: impl AsRef<str> + Send,
     ) -> Result<Response<FundBalanceSheetsData>, Error> {
         self.fund_detail(endpoints::FUND_BALANCE_SHEETS, fund_type, thscode)
             .await

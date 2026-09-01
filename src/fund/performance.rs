@@ -1,10 +1,10 @@
 use crate::endpoints;
 use crate::{
     Client, Error, FundDrawdownsData, FundIndicatorHistoryData, FundNavData, FundNavType,
-    FundRange, FundReturnsData, FundType, Response, Thscode, UnixMillis,
+    FundRange, FundReturnsData, FundType, Response, UnixMillis,
 };
 
-use super::{FundTarget, validate_history_range};
+use super::{fund_target_query, validate_history_range};
 
 impl Client {
     /// 获取基金净值序列。
@@ -18,11 +18,11 @@ impl Client {
     pub async fn fund_performance_nav(
         &self,
         fund_type: FundType,
-        thscode: &Thscode,
+        thscode: impl AsRef<str> + Send,
         range: Option<FundRange>,
         nav_type: FundNavType,
     ) -> Result<Response<FundNavData>, Error> {
-        let mut query = FundTarget::new(fund_type, thscode)?.query();
+        let mut query = fund_target_query(fund_type, thscode)?;
         if let Some(range) = range {
             query.push(("range", range.to_string()));
         }
@@ -41,7 +41,7 @@ impl Client {
     pub async fn fund_performance_returns(
         &self,
         fund_type: FundType,
-        thscode: &Thscode,
+        thscode: impl AsRef<str> + Send,
     ) -> Result<Response<FundReturnsData>, Error> {
         self.fund_detail(endpoints::FUND_RETURNS, fund_type, thscode)
             .await
@@ -58,13 +58,14 @@ impl Client {
     pub async fn fund_performance_indicators_historical(
         &self,
         fund_type: FundType,
-        thscode: &Thscode,
-        start: UnixMillis,
-        end: UnixMillis,
+        thscode: impl AsRef<str> + Send,
+        start: i64,
+        end: i64,
     ) -> Result<Response<FundIndicatorHistoryData>, Error> {
-        let target = FundTarget::new(fund_type, thscode)?;
+        let mut query = fund_target_query(fund_type, thscode)?;
+        let start = UnixMillis::new(start)?;
+        let end = UnixMillis::new(end)?;
         validate_history_range(start, end)?;
-        let mut query = target.query();
         query.push(("start", start.to_string()));
         query.push(("end", end.to_string()));
         self.get(endpoints::FUND_INDICATORS_HISTORICAL, &query)
@@ -82,7 +83,7 @@ impl Client {
     pub async fn fund_performance_drawdowns(
         &self,
         fund_type: FundType,
-        thscode: &Thscode,
+        thscode: impl AsRef<str> + Send,
     ) -> Result<Response<FundDrawdownsData>, Error> {
         self.fund_detail(endpoints::FUND_DRAWDOWNS, fund_type, thscode)
             .await
@@ -100,14 +101,12 @@ mod tests {
             .base_url("http://127.0.0.1:9")
             .build()
             .unwrap();
-        let fund = Thscode::new("025480.OF").unwrap();
-
         let error = client
             .fund_performance_indicators_historical(
                 FundType::Otc,
-                &fund,
-                UnixMillis::new(1_577_836_800_000).unwrap(),
-                UnixMillis::new(1_735_776_000_000).unwrap(),
+                "025480.OF",
+                1_577_836_800_000,
+                1_735_776_000_000,
             )
             .await
             .unwrap_err();

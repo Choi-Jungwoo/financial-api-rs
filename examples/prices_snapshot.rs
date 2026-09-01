@@ -1,14 +1,9 @@
-include!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/examples/configuration/client.rs"
-));
-
-use financial_api::{AShareCode, PriceSnapshotSelection};
+use financial_api::{Client, Error, PriceSnapshotSelection};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = from_env()?;
-    let selection = PriceSnapshotSelection::targets(vec![AShareCode::new("600519.SH")?])?;
+async fn main() -> Result<(), Error> {
+    let client = Client::from_env()?;
+    let selection = PriceSnapshotSelection::targets(["600519.SH"])?;
     let response = client.prices_snapshot(&selection).await?;
 
     println!("request_id={}", response.request_id());

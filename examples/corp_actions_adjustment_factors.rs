@@ -1,18 +1,10 @@
-include!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/examples/configuration/client.rs"
-));
-
-use financial_api::{AShareCode, NaturalDate};
+use financial_api::{Client, Error};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = from_env()?;
-    let target = AShareCode::new("600519.SH")?;
-    let from = NaturalDate::parse("2026-01-01")?;
-    let to = NaturalDate::parse("2026-08-25")?;
+async fn main() -> Result<(), Error> {
+    let client = Client::from_env()?;
     let response = client
-        .corp_actions_adjustment_factors(&target, Some(from), Some(to))
+        .corp_actions_adjustment_factors("600519.SH", Some("2026-01-01"), Some("2026-08-25"))
         .await?;
 
     println!("request_id={}", response.request_id());

@@ -1,13 +1,8 @@
-include!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/examples/configuration/client.rs"
-));
-
-use financial_api::HotListPeriod;
+use financial_api::{Client, Error, HotListPeriod};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = from_env()?;
+async fn main() -> Result<(), Error> {
+    let client = Client::from_env()?;
     let response = client
         .special_data_hot_stock_list(HotListPeriod::Day)
         .await?;

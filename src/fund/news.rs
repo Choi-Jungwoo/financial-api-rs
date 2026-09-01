@@ -1,7 +1,7 @@
 use crate::endpoints;
-use crate::{Client, Cursor, Error, FundNewsData, FundType, Response, Thscode, ValidationError};
+use crate::{Client, Cursor, Error, FundNewsData, FundType, Response, ValidationError};
 
-use super::FundTarget;
+use super::fund_target_query;
 
 impl Client {
     /// 按不透明游标分页获取基金新闻。
@@ -15,20 +15,19 @@ impl Client {
     pub async fn fund_news_article_list(
         &self,
         fund_type: FundType,
-        thscode: &Thscode,
+        thscode: impl AsRef<str> + Send,
         limit: Option<u32>,
-        offset: Option<&Cursor>,
+        offset: Option<&str>,
     ) -> Result<Response<FundNewsData>, Error> {
-        let target = FundTarget::new(fund_type, thscode)?;
+        let mut query = fund_target_query(fund_type, thscode)?;
         if limit == Some(0) {
             return Err(ValidationError::new("limit", "must be at least 1").into());
         }
-        let mut query = target.query();
         if let Some(limit) = limit {
             query.push(("limit", limit.to_string()));
         }
         if let Some(offset) = offset {
-            query.push(("offset", offset.to_string()));
+            query.push(("offset", Cursor::new(offset)?.into_string()));
         }
         self.get(endpoints::FUND_NEWS, &query).await
     }
@@ -45,10 +44,8 @@ mod tests {
             .base_url("http://127.0.0.1:9")
             .build()
             .unwrap();
-        let fund = Thscode::new("025480.OF").unwrap();
-
         let error = client
-            .fund_news_article_list(FundType::Otc, &fund, Some(0), None)
+            .fund_news_article_list(FundType::Otc, "025480.OF", Some(0), None)
             .await
             .unwrap_err();
 

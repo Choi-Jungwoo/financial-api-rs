@@ -1,16 +1,10 @@
-include!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/examples/configuration/client.rs"
-));
-
-use financial_api::{FundType, HolderMergeScope, Thscode};
+use financial_api::{Client, Error, FundType, HolderMergeScope};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = from_env()?;
-    let fund = Thscode::new("000037.OF")?;
+async fn main() -> Result<(), Error> {
+    let client = Client::from_env()?;
     let response = client
-        .fund_holders_detail(FundType::Otc, &fund, HolderMergeScope::All)
+        .fund_holders_detail(FundType::Otc, "000037.OF", HolderMergeScope::All)
         .await?;
 
     println!("request_id={}", response.request_id());

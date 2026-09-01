@@ -1,5 +1,5 @@
 use crate::endpoints;
-use crate::{Client, Error, FundDiagnosticsData, FundType, Response, Thscode};
+use crate::{Client, Error, FundDiagnosticsData, FundType, Response};
 
 impl Client {
     /// 获取基金诊断维度。
@@ -13,7 +13,7 @@ impl Client {
     pub async fn fund_diagnostics_detail(
         &self,
         fund_type: FundType,
-        thscode: &Thscode,
+        thscode: impl AsRef<str> + Send,
     ) -> Result<Response<FundDiagnosticsData>, Error> {
         self.fund_detail(endpoints::FUND_DIAGNOSTICS, fund_type, thscode)
             .await

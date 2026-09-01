@@ -1,13 +1,8 @@
-include!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/examples/configuration/client.rs"
-));
-
-use financial_api::{LimitBreakSortField, Page, SortDirection};
+use financial_api::{Client, Error, LimitBreakSortField, Page, SortDirection};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = from_env()?;
+async fn main() -> Result<(), Error> {
+    let client = Client::from_env()?;
     let response = client
         .special_data_limit_break_pool(
             None,

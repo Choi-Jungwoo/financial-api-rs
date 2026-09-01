@@ -1,13 +1,12 @@
 use serde::de::DeserializeOwned;
 
 use crate::endpoints;
-use crate::endpoints::join_values;
+use crate::endpoints::{join_a_share_codes, join_values};
 use crate::{
-    AShareCode, AnomalyData, AnomalyTag, Client, DragonTigerBoard, DragonTigerData, Error,
-    HotListPeriod, HotStockData, HotStockHistoryData, HotStockTrendData, LadderData,
-    LimitBreakData, LimitBreakSortField, LimitDownData, LimitDownSortField, LimitUpData,
-    LimitUpSortField, NaturalDate, Page, Response, ShanghaiDateMillis, SortDirection,
-    ValidationError,
+    AnomalyData, AnomalyTag, Client, DragonTigerBoard, DragonTigerData, Error, HotListPeriod,
+    HotStockData, HotStockHistoryData, HotStockTrendData, LadderData, LimitBreakData,
+    LimitBreakSortField, LimitDownData, LimitDownSortField, LimitUpData, LimitUpSortField,
+    NaturalDate, Page, Response, ShanghaiDateMillis, SortDirection, ValidationError,
 };
 
 use super::validate_date_order;
@@ -43,9 +42,9 @@ impl Client {
     )]
     pub async fn special_data_anomaly_analysis_stock(
         &self,
-        thscodes: &[AShareCode],
+        thscodes: &[impl AsRef<str> + Sync],
     ) -> Result<Response<AnomalyData>, Error> {
-        let query = [("thscodes", join_values("thscodes", thscodes, Some(50))?)];
+        let query = [("thscodes", join_a_share_codes(thscodes, Some(50))?)];
         self.get(endpoints::ANOMALY_STOCK, &query).await
     }
 
@@ -60,8 +59,9 @@ impl Client {
     pub async fn special_data_dragon_tiger_list(
         &self,
         board_type: DragonTigerBoard,
-        date: Option<NaturalDate>,
+        date: Option<&str>,
     ) -> Result<Response<DragonTigerData>, Error> {
+        let date = date.map(NaturalDate::parse).transpose()?;
         if let Some(date) = date {
             self.validate_recent_date(date, "date")?;
         }
@@ -98,8 +98,9 @@ impl Client {
     )]
     pub async fn special_data_hot_stock_list_history(
         &self,
-        date: NaturalDate,
+        date: &str,
     ) -> Result<Response<HotStockHistoryData>, Error> {
+        let date = NaturalDate::parse(date)?;
         self.validate_recent_date(date, "date")?;
         self.get(endpoints::HOT_STOCK_HISTORY, &[("date", date.to_string())])
             .await
@@ -115,10 +116,13 @@ impl Client {
     )]
     pub async fn special_data_hot_stock_rank_trend(
         &self,
-        thscode: &AShareCode,
-        start_date: NaturalDate,
-        end_date: NaturalDate,
+        thscode: impl AsRef<str> + Send,
+        start_date: &str,
+        end_date: &str,
     ) -> Result<Response<HotStockTrendData>, Error> {
+        let thscode = crate::AShareCode::new(thscode)?;
+        let start_date = NaturalDate::parse(start_date)?;
+        let end_date = NaturalDate::parse(end_date)?;
         validate_date_order(start_date, end_date, "end_date")?;
         self.validate_recent_date(start_date, "start_date")?;
         self.validate_recent_date(end_date, "end_date")?;
@@ -131,7 +135,7 @@ impl Client {
             );
         }
         let query = [
-            ("thscode", thscode.to_string()),
+            ("thscode", thscode.into_string()),
             ("start_date", start_date.to_string()),
             ("end_date", end_date.to_string()),
         ];
@@ -148,19 +152,13 @@ impl Client {
     )]
     pub async fn special_data_limit_up_pool(
         &self,
-        date_ms: Option<ShanghaiDateMillis>,
+        date: Option<&str>,
         page: Page,
         sort_field: LimitUpSortField,
         sort_dir: SortDirection,
     ) -> Result<Response<LimitUpData>, Error> {
-        self.special_data_pool(
-            endpoints::LIMIT_UP_POOL,
-            date_ms,
-            page,
-            sort_field.to_string(),
-            sort_dir,
-        )
-        .await
+        self.special_data_pool(endpoints::LIMIT_UP_POOL, date, page, sort_field, sort_dir)
+            .await
     }
 
     /// 获取跌停池。
@@ -173,19 +171,13 @@ impl Client {
     )]
     pub async fn special_data_limit_down_pool(
         &self,
-        date_ms: Option<ShanghaiDateMillis>,
+        date: Option<&str>,
         page: Page,
         sort_field: LimitDownSortField,
         sort_dir: SortDirection,
     ) -> Result<Response<LimitDownData>, Error> {
-        self.special_data_pool(
-            endpoints::LIMIT_DOWN_POOL,
-            date_ms,
-            page,
-            sort_field.to_string(),
-            sort_dir,
-        )
-        .await
+        self.special_data_pool(endpoints::LIMIT_DOWN_POOL, date, page, sort_field, sort_dir)
+            .await
     }
 
     /// 获取炸板池。
@@ -198,16 +190,16 @@ impl Client {
     )]
     pub async fn special_data_limit_break_pool(
         &self,
-        date_ms: Option<ShanghaiDateMillis>,
+        date: Option<&str>,
         page: Page,
         sort_field: LimitBreakSortField,
         sort_dir: SortDirection,
     ) -> Result<Response<LimitBreakData>, Error> {
         self.special_data_pool(
             endpoints::LIMIT_BREAK_POOL,
-            date_ms,
+            date,
             page,
-            sort_field.to_string(),
+            sort_field,
             sort_dir,
         )
         .await
@@ -216,18 +208,19 @@ impl Client {
     async fn special_data_pool<T: DeserializeOwned>(
         &self,
         path: &str,
-        date_ms: Option<ShanghaiDateMillis>,
+        date: Option<&str>,
         page: Page,
-        sort_field: String,
+        sort_field: impl std::fmt::Display,
         sort_dir: SortDirection,
     ) -> Result<Response<T>, Error> {
         let mut query = vec![
             ("page", page.number().to_string()),
             ("size", page.size().to_string()),
-            ("sort_field", sort_field),
+            ("sort_field", sort_field.to_string()),
             ("sort_dir", sort_dir.to_string()),
         ];
-        if let Some(date_ms) = date_ms {
+        if let Some(date) = date {
+            let date_ms = ShanghaiDateMillis::from_date(NaturalDate::parse(date)?)?;
             query.push(("date_ms", date_ms.to_string()));
         }
         self.get(path, &query).await
@@ -284,7 +277,7 @@ impl Client {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ApiKey;
+    use crate::{AShareCode, ApiKey};
 
     fn client() -> Client {
         Client::builder(ApiKey::new("test-api-key").unwrap())
@@ -313,22 +306,15 @@ mod tests {
 
         for error in [
             client
-                .special_data_hot_stock_rank_trend(
-                    &stock,
-                    NaturalDate::parse("2024-02-29").unwrap(),
-                    NaturalDate::parse("2025-03-01").unwrap(),
-                )
+                .special_data_hot_stock_rank_trend(&stock, "2024-02-29", "2025-03-01")
                 .await
                 .unwrap_err(),
             client
-                .special_data_hot_stock_list_history(NaturalDate::parse("2025-08-24").unwrap())
+                .special_data_hot_stock_list_history("2025-08-24")
                 .await
                 .unwrap_err(),
             client
-                .special_data_dragon_tiger_list(
-                    DragonTigerBoard::All,
-                    Some(NaturalDate::parse("2026-08-26").unwrap()),
-                )
+                .special_data_dragon_tiger_list(DragonTigerBoard::All, Some("2026-08-26"))
                 .await
                 .unwrap_err(),
         ] {

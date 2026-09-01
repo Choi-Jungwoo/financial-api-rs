@@ -12,8 +12,9 @@ impl Client {
     )]
     pub async fn fund_companies_detail(
         &self,
-        company_id: &CompanyId,
+        company_id: impl AsRef<str> + Send,
     ) -> Result<Response<FundCompanyData>, Error> {
+        let company_id = CompanyId::new(company_id.as_ref())?;
         self.get(
             endpoints::FUND_COMPANY_DETAIL,
             &[("company_id", company_id.as_str())],

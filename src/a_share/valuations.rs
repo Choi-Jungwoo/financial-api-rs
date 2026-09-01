@@ -1,6 +1,6 @@
 use crate::endpoints;
-use crate::endpoints::join_values;
-use crate::{AShareCode, Client, Error, Response, ValuationsData};
+use crate::endpoints::join_a_share_codes;
+use crate::{Client, Error, Response, ValuationsData};
 
 impl Client {
     /// 获取最多 100 个 A 股标的的最新估值指标。
@@ -13,9 +13,9 @@ impl Client {
     )]
     pub async fn a_share_valuations_snapshot(
         &self,
-        thscodes: &[AShareCode],
+        thscodes: &[impl AsRef<str> + Sync],
     ) -> Result<Response<ValuationsData>, Error> {
-        let query = [("thscodes", join_values("thscodes", thscodes, Some(100))?)];
+        let query = [("thscodes", join_a_share_codes(thscodes, Some(100))?)];
         self.get(endpoints::VALUATIONS_SNAPSHOT, &query).await
     }
 }
@@ -23,7 +23,7 @@ impl Client {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ApiKey;
+    use crate::{AShareCode, ApiKey};
 
     #[tokio::test]
     async fn snapshot_rejects_more_than_one_hundred_targets_before_transport() {

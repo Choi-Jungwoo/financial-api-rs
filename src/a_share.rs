@@ -6,11 +6,11 @@ mod prices;
 mod special_data;
 mod valuations;
 
+pub use financials::FinancialRange;
 pub use prices::PriceSnapshotSelection;
 
+use crate::types::TEN_YEARS_MS;
 use crate::{NaturalDate, UnixMillis, ValidationError};
-
-const TEN_YEARS_MS: i64 = 315_576_000_000;
 
 fn validate_millis_window(
     start: UnixMillis,

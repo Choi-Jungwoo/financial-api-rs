@@ -1,13 +1,8 @@
-include!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/examples/configuration/client.rs"
-));
-
-use financial_api::{AssetType, TickerListRequest};
+use financial_api::{AssetType, Client, Error, TickerListRequest};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = from_env()?;
+async fn main() -> Result<(), Error> {
+    let client = Client::from_env()?;
     let request = TickerListRequest::new().asset_types([AssetType::AShare]);
     let response = client.tickers_list(&request).await?;
 

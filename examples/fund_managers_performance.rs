@@ -1,22 +1,10 @@
-include!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/examples/configuration/client.rs"
-));
-mod example_fund {
-    include!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/examples/configuration/fund.rs"
-    ));
-}
-
-use financial_api::ManagerPerformanceRange;
+use financial_api::{Client, Error, ManagerPerformanceRange};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = from_env()?;
-    let manager_id = example_fund::manager_id(&client).await?;
+async fn main() -> Result<(), Error> {
+    let client = Client::from_env()?;
     let response = client
-        .fund_managers_performance(&manager_id, ManagerPerformanceRange::Month)
+        .fund_managers_performance("H002417139", ManagerPerformanceRange::Month)
         .await?;
 
     println!("request_id={}", response.request_id());

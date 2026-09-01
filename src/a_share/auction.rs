@@ -1,8 +1,7 @@
 use crate::endpoints;
-use crate::endpoints::join_values;
+use crate::endpoints::join_a_share_codes;
 use crate::{
-    AShareCode, AuctionBenchmarkData, AuctionSnapshotData, AuctionStage, Client, Error,
-    NaturalDate, Response,
+    AuctionBenchmarkData, AuctionSnapshotData, AuctionStage, Client, Error, NaturalDate, Response,
 };
 
 impl Client {
@@ -16,11 +15,11 @@ impl Client {
     )]
     pub async fn a_share_auction_snapshot(
         &self,
-        thscodes: &[AShareCode],
+        thscodes: &[impl AsRef<str> + Sync],
         stage: AuctionStage,
     ) -> Result<Response<AuctionSnapshotData>, Error> {
         let query = [
-            ("thscodes", join_values("thscodes", thscodes, None)?),
+            ("thscodes", join_a_share_codes(thscodes, None)?),
             ("stage", stage.to_string()),
         ];
         self.get(endpoints::AUCTION_SNAPSHOT, &query).await
@@ -36,8 +35,9 @@ impl Client {
     )]
     pub async fn a_share_auction_short_term_benchmark(
         &self,
-        date: Option<NaturalDate>,
+        date: Option<&str>,
     ) -> Result<Response<AuctionBenchmarkData>, Error> {
+        let date = date.map(NaturalDate::parse).transpose()?;
         let query = date
             .map(|date| vec![("date", date.to_string())])
             .unwrap_or_default();
@@ -58,7 +58,7 @@ mod tests {
             .unwrap();
 
         let error = client
-            .a_share_auction_snapshot(&[], AuctionStage::Final)
+            .a_share_auction_snapshot(&[] as &[&str], AuctionStage::Final)
             .await
             .unwrap_err();
 

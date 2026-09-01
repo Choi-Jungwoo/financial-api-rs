@@ -2,35 +2,8 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Deserializer, Serialize};
 
-use super::market_time::UnixMillis;
 use super::wire::wire_enum;
 use crate::ValidationError;
-
-/// “最近报告期”和“时间戳区间”互斥的财务查询。
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum FinancialRange {
-    Recent { limit: u8 },
-    Between { start: UnixMillis, end: UnixMillis },
-}
-
-impl FinancialRange {
-    pub const fn recent(limit: u8) -> Result<Self, ValidationError> {
-        if limit == 0 || limit > 20 {
-            return Err(ValidationError::new("limit", "must be in the range 1..=20"));
-        }
-        Ok(Self::Recent { limit })
-    }
-
-    pub const fn between(start: UnixMillis, end: UnixMillis) -> Result<Self, ValidationError> {
-        if end.get() < start.get() {
-            return Err(ValidationError::new(
-                "end",
-                "must not be earlier than start",
-            ));
-        }
-        Ok(Self::Between { start, end })
-    }
-}
 
 /// `YYYY-[1-4]` 格式的财务报告期标识。
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, derive_more::Display)]
@@ -62,6 +35,12 @@ impl FromStr for FinancialReport {
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
         Self::parse(value)
+    }
+}
+
+impl AsRef<str> for FinancialReport {
+    fn as_ref(&self) -> &str {
+        self.as_str()
     }
 }
 
@@ -139,20 +118,7 @@ wire_enum! {
 
 #[cfg(test)]
 mod tests {
-    use super::{FinancialRange, FinancialReport};
-    use crate::UnixMillis;
-
-    #[test]
-    fn financial_range_makes_conflicting_modes_unrepresentable() {
-        assert!(FinancialRange::recent(1).is_ok());
-        assert!(FinancialRange::recent(20).is_ok());
-        assert!(FinancialRange::recent(0).is_err());
-        assert!(FinancialRange::recent(21).is_err());
-
-        let start = UnixMillis::new(1_700_000_000_000).unwrap();
-        let end = UnixMillis::new(1_600_000_000_000).unwrap();
-        assert!(FinancialRange::between(start, end).is_err());
-    }
+    use super::FinancialReport;
 
     #[test]
     fn financial_report_uses_standard_fallible_conversion() {

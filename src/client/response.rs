@@ -26,9 +26,8 @@ impl<T> Response<T> {
 impl Response<serde_json::Value> {
     /// 将无损 JSON 数据解码为应用自有的响应类型。
     pub fn into_typed<T: DeserializeOwned>(self) -> Result<Response<T>, Error> {
-        let data = serde_json::from_value(self.data).map_err(|source| Error::InvalidResponse {
-            source: Some(source),
-        })?;
+        let data = serde_json::from_value(self.data)
+            .map_err(|source| Error::InvalidResponse { source })?;
         Ok(Response {
             request_id: self.request_id,
             data,
@@ -38,9 +37,7 @@ impl Response<serde_json::Value> {
 
 pub(super) fn decode<T: DeserializeOwned>(bytes: &[u8]) -> Result<Response<T>, Error> {
     let envelope: Envelope =
-        serde_json::from_slice(bytes).map_err(|source| Error::InvalidResponse {
-            source: Some(source),
-        })?;
+        serde_json::from_slice(bytes).map_err(|source| Error::InvalidResponse { source })?;
 
     if envelope.code != 0 {
         return Err(
@@ -48,9 +45,8 @@ pub(super) fn decode<T: DeserializeOwned>(bytes: &[u8]) -> Result<Response<T>, E
         );
     }
 
-    let data = serde_json::from_value(envelope.data).map_err(|source| Error::InvalidResponse {
-        source: Some(source),
-    })?;
+    let data = serde_json::from_value(envelope.data)
+        .map_err(|source| Error::InvalidResponse { source })?;
     Ok(Response {
         request_id: envelope.request_id,
         data,

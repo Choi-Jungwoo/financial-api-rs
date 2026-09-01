@@ -117,7 +117,7 @@ pub enum Error {
     #[error("response did not match the API envelope")]
     InvalidResponse {
         #[source]
-        source: Option<serde_json::Error>,
+        source: serde_json::Error,
     },
 
     #[error(transparent)]

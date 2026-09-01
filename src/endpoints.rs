@@ -1,6 +1,6 @@
-use std::fmt;
+use std::fmt::{self, Write};
 
-use crate::ValidationError;
+use crate::{AShareCode, Thscode, ValidationError};
 
 /// 一个已支持 REST 能力的稳定名称和路径。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -87,20 +87,62 @@ pub(crate) fn join_values<T: fmt::Display>(
     values: &[T],
     maximum: Option<usize>,
 ) -> Result<String, ValidationError> {
-    if values.is_empty() {
+    validate_value_count(field, values.len(), maximum)?;
+    let mut joined = String::new();
+    for value in values {
+        if !joined.is_empty() {
+            joined.push(',');
+        }
+        write!(&mut joined, "{value}").expect("writing to a String cannot fail");
+    }
+    Ok(joined)
+}
+
+pub(crate) fn join_a_share_codes(
+    values: &[impl AsRef<str>],
+    maximum: Option<usize>,
+) -> Result<String, ValidationError> {
+    validate_value_count("thscodes", values.len(), maximum)?;
+    let mut joined = String::new();
+    for value in values {
+        if !joined.is_empty() {
+            joined.push(',');
+        }
+        joined.push_str(AShareCode::new(value)?.as_str());
+    }
+    Ok(joined)
+}
+
+pub(crate) fn join_thscodes(
+    values: &[impl AsRef<str>],
+    maximum: Option<usize>,
+) -> Result<String, ValidationError> {
+    validate_value_count("thscodes", values.len(), maximum)?;
+    let mut joined = String::new();
+    for value in values {
+        if !joined.is_empty() {
+            joined.push(',');
+        }
+        joined.push_str(Thscode::new(value)?.as_str());
+    }
+    Ok(joined)
+}
+
+fn validate_value_count(
+    field: &'static str,
+    length: usize,
+    maximum: Option<usize>,
+) -> Result<(), ValidationError> {
+    if length == 0 {
         return Err(ValidationError::new(field, "must not be empty"));
     }
-    if maximum.is_some_and(|maximum| values.len() > maximum) {
+    if maximum.is_some_and(|maximum| length > maximum) {
         return Err(ValidationError::new(
             field,
             "contains more values than the endpoint allows",
         ));
     }
-    Ok(values
-        .iter()
-        .map(ToString::to_string)
-        .collect::<Vec<_>>()
-        .join(","))
+    Ok(())
 }
 
 #[cfg(test)]

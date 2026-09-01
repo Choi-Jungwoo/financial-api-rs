@@ -1,18 +1,18 @@
 use std::collections::BTreeSet;
 
 use financial_api::{
-    AShareCode, Adjustment, AnomalyTag, ApiKey, AuctionStage, BusinessErrorKind, Client, CompanyId,
-    DragonTigerBoard, Error, FinancialPeriod, FinancialRange, FinancialReport, FundNavType,
-    FundRange, FundType, HolderMergeScope, HotListPeriod, IndexTag, LimitBreakSortField,
-    LimitDownSortField, LimitUpSortField, ManagerId, ManagerPerformanceRange, NaturalDate,
-    OfferingStatus, Page, PortfolioAssetType, PriceSnapshotSelection, ReportType,
-    SUPPORTED_ENDPOINTS, SearchQuery, SortDirection, Thscode, TickerListRequest,
-    TickerSearchRequest, UnixMillis,
+    Adjustment, AnomalyTag, ApiKey, AuctionStage, BusinessErrorKind, Client, DragonTigerBoard,
+    Error, FinancialPeriod, FinancialRange, FundNavType, FundRange, FundType, HolderMergeScope,
+    HotListPeriod, IndexTag, LimitBreakSortField, LimitDownSortField, LimitUpSortField,
+    ManagerPerformanceRange, NaturalDate, OfferingStatus, Page, PortfolioAssetType,
+    PriceSnapshotSelection, SUPPORTED_ENDPOINTS, SortDirection, TickerListRequest,
+    TickerSearchRequest,
 };
 use serde_json::{Value, json};
 use wiremock::{Mock, MockServer, Request, Respond, ResponseTemplate};
 
 const TIMESTAMP: i64 = 1_716_105_600_000;
+const END_TIMESTAMP: i64 = 1_716_192_000_000;
 
 #[derive(Debug, Clone, Copy)]
 struct SuccessfulEndpoint;
@@ -605,7 +605,7 @@ fn expected_query(path: &str) -> Option<&'static str> {
 }
 
 #[tokio::test]
-async fn every_catalogued_endpoint_has_an_executable_typed_client_method() {
+async fn every_catalogued_endpoint_has_an_executable_client_method() {
     let server = MockServer::start().await;
     Mock::given(wiremock::matchers::method("GET"))
         .respond_with(SuccessfulEndpoint)
@@ -619,17 +619,8 @@ async fn every_catalogued_endpoint_has_an_executable_typed_client_method() {
 
     let denied_client = client(&denied_server);
     let client = client(&server);
-    let stock = AShareCode::new("600519.SH").unwrap();
-    let index = Thscode::new("000300.SH").unwrap();
-    let fund = Thscode::new("025480.OF").unwrap();
-    let exchange_fund = Thscode::new("510300.SH").unwrap();
-    let start = UnixMillis::new(1_716_105_600_000).unwrap();
-    let end = UnixMillis::new(1_716_192_000_000).unwrap();
-    let date = NaturalDate::parse("2026-08-25").unwrap();
-    let report_type = ReportType::new("quarter").unwrap();
-    let financial_report = FinancialReport::parse("2025-4").unwrap();
-    let manager_id = ManagerId::new("manager-1").unwrap();
-    let company_id = CompanyId::new("company-1").unwrap();
+    let date_text = "2026-08-25";
+    let date = NaturalDate::parse(date_text).unwrap();
 
     macro_rules! assert_success {
         ($future:expr, $data:ident => $predicate:expr) => {{
@@ -655,9 +646,7 @@ async fn every_catalogued_endpoint_has_an_executable_typed_client_method() {
     macro_rules! for_each_endpoint {
         ($apply:ident, $api:ident) => {
             $apply!(
-                $api.tickers_search(&TickerSearchRequest::new(
-                    SearchQuery::new("600519").unwrap()
-                )),
+                $api.tickers_search(&TickerSearchRequest::new("600519").unwrap()),
                 data => data.item[0].name == "贵州茅台"
             );
             $apply!(
@@ -669,34 +658,40 @@ async fn every_catalogued_endpoint_has_an_executable_typed_client_method() {
                 data => data.item[0].thscode.as_str() == "886042.TI"
             );
             $apply!(
-                $api.index_constituents_ths_stock_list(&index),
+                $api.index_constituents_ths_stock_list("000300.SH"),
                 data => data.item[0].name == "贵州茅台"
             );
             $apply!(
-                $api.index_prices_snapshot(std::slice::from_ref(&index)),
+                $api.index_prices_snapshot(&["000300.SH"]),
                 data => data.item[0].thscode.as_str() == "000300.SH"
             );
             $apply!(
-                $api.index_prices_historical(&index, start, end),
+                $api.index_prices_historical("000300.SH", TIMESTAMP, END_TIMESTAMP),
                 data => data.item[0].close_price == 1.0
             );
             $apply!(
                 $api.prices_snapshot(
-                    &PriceSnapshotSelection::targets(vec![stock.clone()]).unwrap()
+                    &PriceSnapshotSelection::targets(["600519.SH"]).unwrap()
                 ),
                 data => data.total == 1
             );
             $apply!(
-                $api.prices_historical(&stock, start, end, Adjustment::None, 0),
+                $api.prices_historical(
+                    "600519.SH",
+                    TIMESTAMP,
+                    END_TIMESTAMP,
+                    Adjustment::None,
+                    0
+                ),
                 data => data.item[0].close_price == 1.0
             );
             $apply!(
-                $api.corp_actions_adjustment_factors(&stock, Some(date), None),
+                $api.corp_actions_adjustment_factors("600519.SH", Some(date_text), None),
                 data => data.item[0].ex_date_ms.get() == TIMESTAMP
             );
             $apply!(
                 $api.financials_income_statements(
-                    &stock,
+                    "600519.SH",
                     FinancialPeriod::Annual,
                     FinancialRange::recent(1).unwrap()
                 ),
@@ -704,7 +699,7 @@ async fn every_catalogued_endpoint_has_an_executable_typed_client_method() {
             );
             $apply!(
                 $api.financials_balance_sheets(
-                    &stock,
+                    "600519.SH",
                     FinancialPeriod::Annual,
                     FinancialRange::recent(1).unwrap()
                 ),
@@ -712,14 +707,14 @@ async fn every_catalogued_endpoint_has_an_executable_typed_client_method() {
             );
             $apply!(
                 $api.financials_cash_flow_statements(
-                    &stock,
+                    "600519.SH",
                     FinancialPeriod::Annual,
                     FinancialRange::recent(1).unwrap()
                 ),
                 data => data.item[0].meta.fiscal_year == 2025
             );
             $apply!(
-                $api.financials_indicators(&stock, &financial_report),
+                $api.financials_indicators("600519.SH", "2025-4"),
                 data => data.abilities[0].indicators[0].value.is_none()
             );
             $apply!(
@@ -728,17 +723,17 @@ async fn every_catalogued_endpoint_has_an_executable_typed_client_method() {
             );
             $apply!(
                 $api.a_share_auction_snapshot(
-                    std::slice::from_ref(&stock),
+                    &["600519.SH"],
                     AuctionStage::Final
                 ),
                 data => data.item[0].name == "贵州茅台"
             );
             $apply!(
-                $api.a_share_auction_short_term_benchmark(Some(date)),
+                $api.a_share_auction_short_term_benchmark(Some(date_text)),
                 data => data.item[0].tags.is_empty()
             );
             $apply!(
-                $api.a_share_valuations_snapshot(std::slice::from_ref(&stock)),
+                $api.a_share_valuations_snapshot(&["600519.SH"]),
                 data => data.item[0].name.as_deref() == Some("贵州茅台")
             );
             $apply!(
@@ -746,11 +741,14 @@ async fn every_catalogued_endpoint_has_an_executable_typed_client_method() {
                 data => data.item[0].tag_name == "涨停"
             );
             $apply!(
-                $api.special_data_anomaly_analysis_stock(std::slice::from_ref(&stock)),
+                $api.special_data_anomaly_analysis_stock(&["600519.SH"]),
                 data => data.item[0].analysis_content == "测试异动"
             );
             $apply!(
-                $api.special_data_dragon_tiger_list(DragonTigerBoard::All, Some(date)),
+                $api.special_data_dragon_tiger_list(
+                    DragonTigerBoard::All,
+                    Some(date_text)
+                ),
                 data => data.stock_items[0].name == "贵州茅台"
             );
             $apply!(
@@ -758,11 +756,15 @@ async fn every_catalogued_endpoint_has_an_executable_typed_client_method() {
                 data => data.item[0].rank_trend.as_str() == "up"
             );
             $apply!(
-                $api.special_data_hot_stock_list_history(date),
+                $api.special_data_hot_stock_list_history(date_text),
                 data => data.item[0].rank == 1
             );
             $apply!(
-                $api.special_data_hot_stock_rank_trend(&stock, date, date),
+                $api.special_data_hot_stock_rank_trend(
+                    "600519.SH",
+                    date_text,
+                    date_text
+                ),
                 data => data.item[0].date == date
             );
             $apply!(
@@ -801,70 +803,83 @@ async fn every_catalogued_endpoint_has_an_executable_typed_client_method() {
                 data => data.item[0].rank == 1
             );
             $apply!(
-                $api.fund_companies_detail(&company_id),
+                $api.fund_companies_detail("company-1"),
                 data => data.item[0].company_name == "测试基金公司"
             );
             $apply!(
-                $api.fund_corporate_actions_dividends(FundType::Otc, &fund),
+                $api.fund_corporate_actions_dividends(FundType::Otc, "025480.OF"),
                 data => data.item[0].per_ten_cash_before_tax == Some(1.0)
             );
             $apply!(
-                $api.fund_diagnostics_detail(FundType::Otc, &fund),
+                $api.fund_diagnostics_detail(FundType::Otc, "025480.OF"),
                 data => data.item[0].peer_code == "peer"
             );
             $apply!(
-                $api.fund_financials_indicators(FundType::Otc, &fund),
+                $api.fund_financials_indicators(FundType::Otc, "025480.OF"),
                 data => data.item[0].current_profit == Some(1.0)
             );
             $apply!(
-                $api.fund_financials_income_statements(FundType::Otc, &fund),
+                $api.fund_financials_income_statements(FundType::Otc, "025480.OF"),
                 data => data.item[0].net_profit == Some(1.0)
             );
             $apply!(
-                $api.fund_financials_balance_sheets(FundType::Otc, &fund),
+                $api.fund_financials_balance_sheets(FundType::Otc, "025480.OF"),
                 data => data.item[0].total_assets == Some(1.0)
             );
             $apply!(
-                $api.fund_holders_detail(FundType::Otc, &fund, HolderMergeScope::All),
+                $api.fund_holders_detail(
+                    FundType::Otc,
+                    "025480.OF",
+                    HolderMergeScope::All
+                ),
                 data => data.item[0].merge_scope.as_str() == "merged"
             );
             $apply!(
-                $api.fund_holders_top(FundType::Otc, &fund, Some(10)),
+                $api.fund_holders_top(FundType::Otc, "025480.OF", Some(10)),
                 data => data.item[0].holder_name.as_deref() == Some("测试持有人")
             );
             $apply!(
-                $api.fund_portfolio_holdings(FundType::Otc, &fund),
+                $api.fund_portfolio_holdings(FundType::Otc, "025480.OF"),
                 data => data.item[0].asset_type == Some(PortfolioAssetType::Stock)
             );
             $apply!(
-                $api.fund_managers_investment_style(&manager_id),
+                $api.fund_managers_investment_style("manager-1"),
                 data => data.item[0].investment_idea.as_deref() == Some("长期投资")
             );
             $apply!(
                 $api.fund_managers_performance(
-                    &manager_id,
+                    "manager-1",
                     ManagerPerformanceRange::Month
                 ),
                 data => data.item[0].manager_return_pct == Some(1.0)
             );
             $apply!(
-                $api.fund_managers_experience(&manager_id),
+                $api.fund_managers_experience("manager-1"),
                 data => data.item[0].awards.is_object()
             );
             $apply!(
-                $api.fund_managers_detail(&manager_id),
+                $api.fund_managers_detail("manager-1"),
                 data => data.item[0].radar_comparison[0].fund_category.as_deref() == Some("equity")
             );
             $apply!(
-                $api.fund_market_snapshot(&exchange_fund),
+                $api.fund_market_snapshot("510300.SH"),
                 data => data.item[0].last_price == 1.0
             );
             $apply!(
-                $api.fund_market_historical(&exchange_fund, start, end),
+                $api.fund_market_historical(
+                    "510300.SH",
+                    TIMESTAMP,
+                    END_TIMESTAMP
+                ),
                 data => data.item[0].close_price == 1.0
             );
             $apply!(
-                $api.fund_news_article_list(FundType::Otc, &fund, Some(20), None),
+                $api.fund_news_article_list(
+                    FundType::Otc,
+                    "025480.OF",
+                    Some(20),
+                    None
+                ),
                 data => data.item[0].title == "测试资讯"
             );
             $apply!(
@@ -874,73 +889,73 @@ async fn every_catalogued_endpoint_has_an_executable_typed_client_method() {
             $apply!(
                 $api.fund_performance_nav(
                     FundType::Otc,
-                    &fund,
+                    "025480.OF",
                     Some(FundRange::Month),
                     FundNavType::Unit
                 ),
                 data => data.item[0].unit_nav == Some(1.0)
             );
             $apply!(
-                $api.fund_performance_returns(FundType::Otc, &fund),
+                $api.fund_performance_returns(FundType::Otc, "025480.OF"),
                 data => data.item[0].return_month == Some(1.0)
             );
             $apply!(
                 $api.fund_performance_indicators_historical(
                     FundType::Otc,
-                    &fund,
-                    start,
-                    end
+                    "025480.OF",
+                    TIMESTAMP,
+                    END_TIMESTAMP
                 ),
                 data => data.item[0].date_ms.get() == TIMESTAMP
             );
             $apply!(
-                $api.fund_performance_drawdowns(FundType::Otc, &fund),
+                $api.fund_performance_drawdowns(FundType::Otc, "025480.OF"),
                 data => data.item[0].thscode.as_str() == "025480.OF"
             );
             $apply!(
                 $api.fund_portfolio_stock_history(
                     FundType::Otc,
-                    &fund,
-                    &report_type,
-                    date
+                    "025480.OF",
+                    "quarter",
+                    date_text
                 ),
                 data => data.item[0].asset_type == PortfolioAssetType::Stock
             );
             $apply!(
                 $api.fund_portfolio_bond_history(
                     FundType::Otc,
-                    &fund,
-                    &report_type,
-                    date
+                    "025480.OF",
+                    "quarter",
+                    date_text
                 ),
                 data => data.item[0].asset_type == PortfolioAssetType::Bond
             );
             $apply!(
                 $api.fund_portfolio_stock_report_dates(
                     FundType::Otc,
-                    &fund,
-                    Some(&report_type)
+                    "025480.OF",
+                    Some("quarter")
                 ),
                 data => data.item[0].report_type_name == "季度"
             );
             $apply!(
                 $api.fund_portfolio_bond_report_dates(
                     FundType::Otc,
-                    &fund,
-                    Some(&report_type)
+                    "025480.OF",
+                    Some("quarter")
                 ),
                 data => data.item[0].report_type.as_str() == "quarter"
             );
             $apply!(
-                $api.fund_portfolio_asset_allocation(FundType::Otc, &fund),
+                $api.fund_portfolio_asset_allocation(FundType::Otc, "025480.OF"),
                 data => data.item[0].stock_ratio_pct == Some(1.0)
             );
             $apply!(
-                $api.fund_portfolio_industry_allocation(FundType::Otc, &fund),
+                $api.fund_portfolio_industry_allocation(FundType::Otc, "025480.OF"),
                 data => data.item[0].industry_name.as_deref() == Some("金融")
             );
             $apply!(
-                $api.fund_profile_detail(FundType::Otc, &fund),
+                $api.fund_profile_detail(FundType::Otc, "025480.OF"),
                 data => data.item[0].fund_name.as_deref() == Some("测试基金")
             );
             $apply!(

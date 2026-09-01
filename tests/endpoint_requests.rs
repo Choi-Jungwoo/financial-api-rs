@@ -1,7 +1,6 @@
 use financial_api::{
-    AShareCode, Adjustment, ApiKey, Client, Cursor, Error, FundType, IndexTag, JsonValue,
-    LimitBreakSortField, MarketDumpUrl, NaturalDate, Page, SearchQuery, ShanghaiDateMillis,
-    SortDirection, Thscode, TickerListRequest, TickerSearchRequest, UnixMillis,
+    Adjustment, ApiKey, Client, Error, FundType, IndexTag, JsonValue, LimitBreakSortField,
+    MarketDumpUrl, NaturalDate, Page, SortDirection, TickerListRequest, TickerSearchRequest,
 };
 use serde_json::json;
 use wiremock::matchers::{method, path, query_param};
@@ -88,15 +87,15 @@ async fn representative_endpoint_families_preserve_their_wire_contracts() {
     client
         .fund_news_article_list(
             FundType::Exchange,
-            &Thscode::new("510300.SH").unwrap(),
+            " 510300.sh ",
             Some(20),
-            Some(&Cursor::new("opaque+/cursor==").unwrap()),
+            Some("opaque+/cursor=="),
         )
         .await
         .unwrap();
     client
         .special_data_limit_break_pool(
-            Some(ShanghaiDateMillis::from_date(NaturalDate::parse("2024-05-20").unwrap()).unwrap()),
+            Some("2024-05-20"),
             Page::new(2, 80).unwrap(),
             LimitBreakSortField::OpenTimes,
             SortDirection::Ascending,
@@ -171,12 +170,10 @@ async fn valid_upper_bounds_reach_transport_with_exact_queries() {
         .await;
 
     let client = client(&server);
-    let stock = AShareCode::new("600519.SH").unwrap();
-    let index = Thscode::new("000300.SH").unwrap();
-    let fund = Thscode::new("025480.OF").unwrap();
-    let start = UnixMillis::new(1_000_000_000_000).unwrap();
-    let ten_year_end = UnixMillis::new(start.get() + 315_576_000_000).unwrap();
-    let search = TickerSearchRequest::new(SearchQuery::new("600519").unwrap())
+    let start = 1_000_000_000_000;
+    let ten_year_end = start + 315_576_000_000;
+    let search = TickerSearchRequest::new("600519")
+        .unwrap()
         .limit(50)
         .unwrap();
     let list = TickerListRequest::new().page(10_000, u32::MAX).unwrap();
@@ -195,10 +192,10 @@ async fn valid_upper_bounds_reach_transport_with_exact_queries() {
         LimitBreakSortField::OpenTimes,
         SortDirection::Ascending,
     ));
-    assert_business_error!(client.fund_holders_top(FundType::Otc, &fund, Some(10)));
-    assert_business_error!(client.index_prices_historical(&index, start, ten_year_end));
+    assert_business_error!(client.fund_holders_top(FundType::Otc, "025480.OF", Some(10)));
+    assert_business_error!(client.index_prices_historical("000300.SH", start, ten_year_end));
     assert_business_error!(client.prices_historical(
-        &stock,
+        "600519.SH",
         start,
         ten_year_end,
         Adjustment::Backward,

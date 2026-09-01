@@ -1,11 +1,10 @@
 use crate::endpoints;
-use crate::endpoints::join_values;
+use crate::endpoints::join_thscodes;
+use crate::types::TEN_YEARS_MS;
 use crate::{
     Client, Error, IndexCatalogData, IndexConstituentsData, IndexHistoricalData, IndexTag,
     PriceSnapshotData, Response, Thscode, UnixMillis, ValidationError,
 };
-
-const TEN_YEARS_MS: i64 = 315_576_000_000;
 
 impl Client {
     /// 按目录标签列出同花顺指数。
@@ -34,11 +33,12 @@ impl Client {
     )]
     pub async fn index_constituents_ths_stock_list(
         &self,
-        thscode: &Thscode,
+        thscode: impl AsRef<str> + Send,
     ) -> Result<Response<IndexConstituentsData>, Error> {
+        let thscode = Thscode::new(thscode)?;
         self.get(
             endpoints::INDEX_CONSTITUENTS,
-            &[("thscode", thscode.to_string())],
+            &[("thscode", thscode.as_str())],
         )
         .await
     }
@@ -53,11 +53,11 @@ impl Client {
     )]
     pub async fn index_prices_snapshot(
         &self,
-        thscodes: &[Thscode],
+        thscodes: &[impl AsRef<str> + Sync],
     ) -> Result<Response<PriceSnapshotData>, Error> {
         self.get(
             endpoints::INDEX_SNAPSHOT,
-            &[("thscodes", join_values("thscodes", thscodes, None)?)],
+            &[("thscodes", join_thscodes(thscodes, None)?)],
         )
         .await
     }
@@ -72,13 +72,16 @@ impl Client {
     )]
     pub async fn index_prices_historical(
         &self,
-        thscode: &Thscode,
-        start: UnixMillis,
-        end: UnixMillis,
+        thscode: impl AsRef<str> + Send,
+        start: i64,
+        end: i64,
     ) -> Result<Response<IndexHistoricalData>, Error> {
+        let thscode = Thscode::new(thscode)?;
+        let start = UnixMillis::new(start)?;
+        let end = UnixMillis::new(end)?;
         validate_history_window(start, end)?;
         let query = [
-            ("thscode", thscode.to_string()),
+            ("thscode", thscode.into_string()),
             ("interval", "1d".to_owned()),
             ("start", start.to_string()),
             ("end", end.to_string()),
@@ -135,7 +138,7 @@ mod tests {
 
         for end in invalid_ends {
             let error = client
-                .index_prices_historical(&index, start, end)
+                .index_prices_historical(&index, start.get(), end.get())
                 .await
                 .unwrap_err();
             assert!(matches!(error, Error::InvalidInput(_)));

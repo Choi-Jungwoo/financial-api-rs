@@ -1,19 +1,9 @@
-include!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/examples/configuration/client.rs"
-));
-mod example_fund {
-    include!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/examples/configuration/fund.rs"
-    ));
-}
+use financial_api::{Client, Error};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = from_env()?;
-    let manager_id = example_fund::manager_id(&client).await?;
-    let response = client.fund_managers_investment_style(&manager_id).await?;
+async fn main() -> Result<(), Error> {
+    let client = Client::from_env()?;
+    let response = client.fund_managers_investment_style("H002417139").await?;
 
     println!("request_id={}", response.request_id());
     println!("{:#?}", response.data());

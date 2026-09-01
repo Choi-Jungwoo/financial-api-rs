@@ -1,12 +1,12 @@
 use serde::Serialize;
 
 use crate::endpoints;
-use crate::{AssetType, Client, Error, Exchange, Response, SearchQuery, TickerData};
+use crate::{AssetType, Client, Error, Exchange, Response, TickerData, ValidationError};
 
 /// 用于标的搜索和跨市场消歧的参数。
 #[derive(Debug, Clone, Serialize)]
 pub struct TickerSearchRequest {
-    q: SearchQuery,
+    q: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     exchange: Option<Exchange>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -15,14 +15,17 @@ pub struct TickerSearchRequest {
 }
 
 impl TickerSearchRequest {
-    #[must_use]
-    pub const fn new(q: SearchQuery) -> Self {
-        Self {
+    pub fn new(q: impl Into<String>) -> Result<Self, ValidationError> {
+        let q = q.into();
+        if q.trim().is_empty() {
+            return Err(ValidationError::new("q", "must not be empty"));
+        }
+        Ok(Self {
             q,
             exchange: None,
             asset_type: None,
             limit: 10,
-        }
+        })
     }
 
     #[must_use]
@@ -69,11 +72,10 @@ impl Client {
 #[cfg(test)]
 mod tests {
     use super::{TickerListRequest, TickerSearchRequest};
-    use crate::SearchQuery;
 
     #[test]
     fn request_builders_enforce_documented_page_bounds() {
-        let search = || TickerSearchRequest::new(SearchQuery::new("600519").unwrap());
+        let search = || TickerSearchRequest::new("600519").unwrap();
         assert!(search().limit(0).is_err());
         assert!(search().limit(1).is_ok());
         assert!(search().limit(50).is_ok());

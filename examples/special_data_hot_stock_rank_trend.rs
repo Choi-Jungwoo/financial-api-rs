@@ -1,18 +1,10 @@
-include!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/examples/configuration/client.rs"
-));
-
-use financial_api::{AShareCode, NaturalDate};
+use financial_api::{Client, Error};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = from_env()?;
-    let target = AShareCode::new("600519.SH")?;
-    let start = NaturalDate::parse("2026-08-01")?;
-    let end = NaturalDate::parse("2026-08-25")?;
+async fn main() -> Result<(), Error> {
+    let client = Client::from_env()?;
     let response = client
-        .special_data_hot_stock_rank_trend(&target, start, end)
+        .special_data_hot_stock_rank_trend("600519.SH", "2026-08-01", "2026-08-25")
         .await?;
 
     println!("request_id={}", response.request_id());

@@ -5,21 +5,6 @@ use serde::{Deserialize, Deserializer, Serialize};
 use super::wire::wire_enum;
 use crate::ValidationError;
 
-/// 用于跨市场标的检索的非空搜索文本。
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, derive_more::Display)]
-#[serde(transparent)]
-pub struct SearchQuery(String);
-
-impl SearchQuery {
-    pub fn new(value: impl Into<String>) -> Result<Self, ValidationError> {
-        let value = value.into();
-        if value.trim().is_empty() {
-            return Err(ValidationError::new("q", "must not be empty"));
-        }
-        Ok(Self(value))
-    }
-}
-
 /// 包含市场后缀的完整标的代码。
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, derive_more::Display)]
 #[serde(transparent)]
@@ -58,6 +43,16 @@ impl Thscode {
     pub fn as_str(&self) -> &str {
         &self.0
     }
+
+    pub(crate) fn into_string(self) -> String {
+        self.0
+    }
+
+    pub(crate) fn ticker_and_suffix(&self) -> (&str, &str) {
+        self.0
+            .split_once('.')
+            .expect("validated thscode always contains a market suffix")
+    }
 }
 
 impl FromStr for Thscode {
@@ -65,6 +60,12 @@ impl FromStr for Thscode {
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
         Self::new(value)
+    }
+}
+
+impl AsRef<str> for Thscode {
+    fn as_ref(&self) -> &str {
+        self.as_str()
     }
 }
 
@@ -83,10 +84,7 @@ pub struct AShareCode(Thscode);
 impl AShareCode {
     pub fn new(value: impl AsRef<str>) -> Result<Self, ValidationError> {
         let code = Thscode::new(value)?;
-        let (ticker, suffix) = code
-            .as_str()
-            .split_once('.')
-            .expect("validated thscode always contains a dot");
+        let (ticker, suffix) = code.ticker_and_suffix();
         if ticker.len() != 6
             || !ticker.bytes().all(|byte| byte.is_ascii_digit())
             || !matches!(suffix, "SH" | "SZ" | "BJ")
@@ -103,6 +101,10 @@ impl AShareCode {
     pub fn as_str(&self) -> &str {
         self.0.as_str()
     }
+
+    pub(crate) fn into_string(self) -> String {
+        self.0.into_string()
+    }
 }
 
 impl FromStr for AShareCode {
@@ -110,6 +112,12 @@ impl FromStr for AShareCode {
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
         Self::new(value)
+    }
+}
+
+impl AsRef<str> for AShareCode {
+    fn as_ref(&self) -> &str {
+        self.as_str()
     }
 }
 
@@ -171,7 +179,7 @@ mod tests {
         let target: Thscode = "600519.sh".parse().unwrap();
         let a_share: AShareCode = "600519.sh".parse().unwrap();
 
-        assert_eq!(target, a_share.clone().into());
+        assert_eq!(target, a_share.into());
         assert!("510300.OF".parse::<AShareCode>().is_err());
     }
 }

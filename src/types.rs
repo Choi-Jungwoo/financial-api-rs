@@ -14,8 +14,7 @@ pub use a_share::{
 };
 pub use decimal::PreciseDecimal;
 pub use finance::{
-    FinancialAbilityKind, FinancialIndicatorId, FinancialPeriod, FinancialRange, FinancialReport,
-    FiscalPeriod,
+    FinancialAbilityKind, FinancialIndicatorId, FinancialPeriod, FinancialReport, FiscalPeriod,
 };
 pub use fund::{
     CompanyId, Cursor, FundCategoryCode, FundNavType, FundRange, FundType, HolderMergeScope,
@@ -24,5 +23,6 @@ pub use fund::{
 };
 pub use index::IndexTag;
 pub use market_data::{Adjustment, DailyInterval};
+pub(crate) use market_time::TEN_YEARS_MS;
 pub use market_time::{CompactDate, NaturalDate, ShanghaiDateMillis, UnixMillis};
-pub use target::{AShareCode, AssetType, Exchange, SearchQuery, Thscode};
+pub use target::{AShareCode, AssetType, Exchange, Thscode};

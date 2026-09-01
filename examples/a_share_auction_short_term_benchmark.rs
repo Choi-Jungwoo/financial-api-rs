@@ -1,16 +1,10 @@
-include!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/examples/configuration/client.rs"
-));
-
-use financial_api::NaturalDate;
+use financial_api::{Client, Error};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = from_env()?;
-    let date = NaturalDate::parse("2026-08-25")?;
+async fn main() -> Result<(), Error> {
+    let client = Client::from_env()?;
     let response = client
-        .a_share_auction_short_term_benchmark(Some(date))
+        .a_share_auction_short_term_benchmark(Some("2026-08-25"))
         .await?;
 
     println!("request_id={}", response.request_id());

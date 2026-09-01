@@ -17,9 +17,10 @@ impl Client {
     )]
     pub async fn fund_market_snapshot(
         &self,
-        thscode: &Thscode,
+        thscode: impl AsRef<str> + Send,
     ) -> Result<Response<FundMarketSnapshotData>, Error> {
-        validate_exchange_fund(thscode)?;
+        let thscode = Thscode::new(thscode)?;
+        validate_exchange_fund(&thscode)?;
         self.get(
             endpoints::FUND_MARKET_SNAPSHOT,
             &[("thscode", thscode.as_str())],
@@ -37,14 +38,17 @@ impl Client {
     )]
     pub async fn fund_market_historical(
         &self,
-        thscode: &Thscode,
-        start: UnixMillis,
-        end: UnixMillis,
+        thscode: impl AsRef<str> + Send,
+        start: i64,
+        end: i64,
     ) -> Result<Response<FundMarketHistoricalData>, Error> {
-        validate_exchange_fund(thscode)?;
+        let thscode = Thscode::new(thscode)?;
+        let start = UnixMillis::new(start)?;
+        let end = UnixMillis::new(end)?;
+        validate_exchange_fund(&thscode)?;
         validate_history_range(start, end)?;
         let query = [
-            ("thscode", thscode.to_string()),
+            ("thscode", thscode.into_string()),
             ("interval", "1d".to_owned()),
             ("start", start.to_string()),
             ("end", end.to_string()),
@@ -54,10 +58,7 @@ impl Client {
 }
 
 fn validate_exchange_fund(thscode: &Thscode) -> Result<(), ValidationError> {
-    let (ticker, suffix) = thscode
-        .as_str()
-        .split_once('.')
-        .expect("validated thscode contains a suffix");
+    let (ticker, suffix) = thscode.ticker_and_suffix();
     let valid = ticker.len() == 6
         && ticker.bytes().all(|byte| byte.is_ascii_digit())
         && matches!(suffix, "SH" | "SZ");

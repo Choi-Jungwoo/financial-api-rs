@@ -15,6 +15,7 @@ run = "cargo test --all-targets"
 
 [tasks.test-examples-live]
 description = "Run every example against the live API using .env credentials"
+env = { _.file = ".env" }
 run = '''
 cargo build --examples
 passed=0
@@ -64,7 +65,13 @@ test "${failed}" -eq 0
 run = "cargo clippy --all-targets -- -D warnings"
 
 [tasks.doc]
-run = "cargo doc --no-deps"
+run = '''
+cargo doc --no-deps
+if rg -q 'examples/configuration/(client|fund)\.rs|include!\(' target/doc/financial_api; then
+  echo "generated API documentation exposes example setup internals"
+  exit 1
+fi
+'''
 
 [tasks.doc-test]
 run = "cargo test --doc"

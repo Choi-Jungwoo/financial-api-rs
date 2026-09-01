@@ -24,44 +24,33 @@ impl Client {
         &self,
         path: &str,
         fund_type: FundType,
-        thscode: &Thscode,
+        thscode: impl AsRef<str> + Send,
     ) -> Result<Response<T>, Error> {
-        let query = FundTarget::new(fund_type, thscode)?.query();
+        let query = fund_target_query(fund_type, thscode)?;
         self.get(path, &query).await
     }
 }
 
-struct FundTarget<'a> {
+fn fund_target_query(
     fund_type: FundType,
-    thscode: &'a Thscode,
-}
-
-impl<'a> FundTarget<'a> {
-    fn new(fund_type: FundType, thscode: &'a Thscode) -> Result<Self, ValidationError> {
-        let suffix = thscode
-            .as_str()
-            .rsplit_once('.')
-            .map(|(_, suffix)| suffix)
-            .expect("validated thscode contains a suffix");
-        let valid = match fund_type {
-            FundType::Otc => suffix == "OF",
-            FundType::Exchange | FundType::Reits => matches!(suffix, "SH" | "SZ"),
-        };
-        if !valid {
-            return Err(ValidationError::new(
-                "thscode",
-                "market suffix does not match fund_type",
-            ));
-        }
-        Ok(Self { fund_type, thscode })
+    thscode: impl AsRef<str>,
+) -> Result<Vec<(&'static str, String)>, ValidationError> {
+    let thscode = Thscode::new(thscode)?;
+    let (_, suffix) = thscode.ticker_and_suffix();
+    let valid = match fund_type {
+        FundType::Otc => suffix == "OF",
+        FundType::Exchange | FundType::Reits => matches!(suffix, "SH" | "SZ"),
+    };
+    if !valid {
+        return Err(ValidationError::new(
+            "thscode",
+            "market suffix does not match fund_type",
+        ));
     }
-
-    fn query(&self) -> Vec<(&'static str, String)> {
-        vec![
-            ("fund_type", self.fund_type.to_string()),
-            ("thscode", self.thscode.to_string()),
-        ]
-    }
+    Ok(vec![
+        ("fund_type", fund_type.to_string()),
+        ("thscode", thscode.into_string()),
+    ])
 }
 
 fn validate_history_range(start: UnixMillis, end: UnixMillis) -> Result<(), ValidationError> {
@@ -96,7 +85,7 @@ fn validate_history_range(start: UnixMillis, end: UnixMillis) -> Result<(), Vali
 
 #[cfg(test)]
 mod tests {
-    use super::{FundTarget, validate_history_range};
+    use super::{fund_target_query, validate_history_range};
     use crate::{FundType, Thscode, UnixMillis};
 
     #[test]
@@ -104,12 +93,12 @@ mod tests {
         let otc = Thscode::new("025480.OF").unwrap();
         let exchange = Thscode::new("510300.SH").unwrap();
 
-        assert!(FundTarget::new(FundType::Otc, &otc).is_ok());
-        assert!(FundTarget::new(FundType::Exchange, &exchange).is_ok());
-        assert!(FundTarget::new(FundType::Reits, &exchange).is_ok());
-        assert!(FundTarget::new(FundType::Otc, &exchange).is_err());
-        assert!(FundTarget::new(FundType::Exchange, &otc).is_err());
-        assert!(FundTarget::new(FundType::Reits, &otc).is_err());
+        assert!(fund_target_query(FundType::Otc, &otc).is_ok());
+        assert!(fund_target_query(FundType::Exchange, &exchange).is_ok());
+        assert!(fund_target_query(FundType::Reits, &exchange).is_ok());
+        assert!(fund_target_query(FundType::Otc, &exchange).is_err());
+        assert!(fund_target_query(FundType::Exchange, &otc).is_err());
+        assert!(fund_target_query(FundType::Reits, &otc).is_err());
     }
 
     #[test]

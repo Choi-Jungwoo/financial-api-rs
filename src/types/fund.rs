@@ -25,11 +25,15 @@ macro_rules! identifier_type {
         impl $name {
             pub fn new(value: impl Into<String>) -> Result<Self, ValidationError> {
                 let value = value.into();
-                let value = value.trim();
-                if value.is_empty() {
+                let trimmed = value.trim();
+                if trimmed.is_empty() {
                     return Err(ValidationError::new($field, "must not be empty"));
                 }
-                Ok(Self(value.to_owned()))
+                if trimmed.len() == value.len() {
+                    Ok(Self(value))
+                } else {
+                    Ok(Self(trimmed.to_owned()))
+                }
             }
 
             #[must_use]
@@ -43,6 +47,12 @@ macro_rules! identifier_type {
 
             fn from_str(value: &str) -> Result<Self, Self::Err> {
                 Self::new(value)
+            }
+        }
+
+        impl AsRef<str> for $name {
+            fn as_ref(&self) -> &str {
+                self.as_str()
             }
         }
 
@@ -76,6 +86,12 @@ identifier_type!(
     "fund_type"
 );
 
+impl ReportType {
+    pub(crate) fn into_string(self) -> String {
+        self.0
+    }
+}
+
 /// 游标分页端点返回的不透明分页游标。
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, derive_more::Display)]
 #[serde(transparent)]
@@ -94,6 +110,10 @@ impl Cursor {
     pub fn as_str(&self) -> &str {
         &self.0
     }
+
+    pub(crate) fn into_string(self) -> String {
+        self.0
+    }
 }
 
 impl FromStr for Cursor {
@@ -101,6 +121,12 @@ impl FromStr for Cursor {
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
         Self::new(value)
+    }
+}
+
+impl AsRef<str> for Cursor {
+    fn as_ref(&self) -> &str {
+        self.as_str()
     }
 }
 

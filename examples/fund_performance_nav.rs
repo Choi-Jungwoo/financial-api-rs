@@ -1,18 +1,12 @@
-include!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/examples/configuration/client.rs"
-));
-
-use financial_api::{FundNavType, FundRange, FundType, Thscode};
+use financial_api::{Client, Error, FundNavType, FundRange, FundType};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = from_env()?;
-    let fund = Thscode::new("025480.OF")?;
+async fn main() -> Result<(), Error> {
+    let client = Client::from_env()?;
     let response = client
         .fund_performance_nav(
             FundType::Otc,
-            &fund,
+            "025480.OF",
             Some(FundRange::Month),
             FundNavType::Unit,
         )

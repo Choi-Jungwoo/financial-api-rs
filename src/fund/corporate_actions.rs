@@ -1,5 +1,5 @@
 use crate::endpoints;
-use crate::{Client, Error, FundDividendsData, FundType, Response, Thscode};
+use crate::{Client, Error, FundDividendsData, FundType, Response};
 
 impl Client {
     /// 获取基金历史分红记录。
@@ -13,7 +13,7 @@ impl Client {
     pub async fn fund_corporate_actions_dividends(
         &self,
         fund_type: FundType,
-        thscode: &Thscode,
+        thscode: impl AsRef<str> + Send,
     ) -> Result<Response<FundDividendsData>, Error> {
         self.fund_detail(endpoints::FUND_DIVIDENDS, fund_type, thscode)
             .await
@@ -31,16 +31,13 @@ mod tests {
             .base_url("http://127.0.0.1:9")
             .build()
             .unwrap();
-        let exchange_fund = Thscode::new("510300.SH").unwrap();
-        let otc_fund = Thscode::new("025480.OF").unwrap();
-
         for error in [
             client
-                .fund_corporate_actions_dividends(FundType::Otc, &exchange_fund)
+                .fund_corporate_actions_dividends(FundType::Otc, "510300.SH")
                 .await
                 .unwrap_err(),
             client
-                .fund_corporate_actions_dividends(FundType::Exchange, &otc_fund)
+                .fund_corporate_actions_dividends(FundType::Exchange, "025480.OF")
                 .await
                 .unwrap_err(),
         ] {

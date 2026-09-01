@@ -40,7 +40,7 @@ pub struct Client {
 
 #[cfg(test)]
 mod tests {
-    use crate::{ApiKey, BusinessErrorKind, Client, Error, SearchQuery, TickerSearchRequest};
+    use crate::{ApiKey, BusinessErrorKind, Client, Error, TickerSearchRequest};
     use serde_json::json;
     use std::time::Duration;
     use wiremock::matchers::{header, method, path, query_param};
@@ -77,7 +77,7 @@ mod tests {
             .base_url(server.uri())
             .build()
             .unwrap();
-        let request = TickerSearchRequest::new(SearchQuery::new("贵州茅台").unwrap());
+        let request = TickerSearchRequest::new("贵州茅台").unwrap();
 
         let response = client.tickers_search(&request).await.unwrap();
 
@@ -108,7 +108,7 @@ mod tests {
                 .base_url(server.uri())
                 .build()
                 .unwrap();
-            let request = TickerSearchRequest::new(SearchQuery::new("600519").unwrap());
+            let request = TickerSearchRequest::new("600519").unwrap();
 
             match client.tickers_search(&request).await.unwrap_err() {
                 Error::Business(error) => {
@@ -134,7 +134,7 @@ mod tests {
             .base_url(server.uri())
             .build()
             .unwrap();
-        let request = TickerSearchRequest::new(SearchQuery::new("600519").unwrap());
+        let request = TickerSearchRequest::new("600519").unwrap();
 
         assert!(matches!(
             client.tickers_search(&request).await.unwrap_err(),
@@ -164,7 +164,7 @@ mod tests {
             .base_url(origin.uri())
             .build()
             .unwrap();
-        let request = TickerSearchRequest::new(SearchQuery::new("600519").unwrap());
+        let request = TickerSearchRequest::new("600519").unwrap();
 
         assert!(matches!(
             client.tickers_search(&request).await.unwrap_err(),
@@ -191,7 +191,7 @@ mod tests {
             .timeout(Duration::from_millis(1))
             .build()
             .unwrap();
-        let request = TickerSearchRequest::new(SearchQuery::new("600519").unwrap());
+        let request = TickerSearchRequest::new("600519").unwrap();
 
         assert!(matches!(
             client.tickers_search(&request).await.unwrap_err(),

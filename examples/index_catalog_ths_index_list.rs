@@ -1,13 +1,8 @@
-include!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/examples/configuration/client.rs"
-));
-
-use financial_api::IndexTag;
+use financial_api::{Client, Error, IndexTag};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = from_env()?;
+async fn main() -> Result<(), Error> {
+    let client = Client::from_env()?;
     let response = client
         .index_catalog_ths_index_list(IndexTag::Concept)
         .await?;
